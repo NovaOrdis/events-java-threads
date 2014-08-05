@@ -1,7 +1,13 @@
 #!/bin/bash
 
 reldir=`dirname $0`
-reldir=`cygpath -w ${reldir}`
+
+cygwin=false
+if uname -a | grep -q "Cygwin"; then
+    cygiwn=true
+fi
+
+${cygwin} && reldir=$(cygpath -w ${reldir})
 
 
 function main()
