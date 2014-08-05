@@ -1,0 +1,19 @@
+Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b71 mixed mode):
+
+"Timer-7" daemon prio=3 tid=0x0000000102f39800 nid=0x150 in Object.wait() [0xfffffffe4077f000]
+   java.lang.Thread.State: WAITING (on object monitor)
+        at java.lang.Object.wait(Native Method)
+        - waiting on <0xfffffffe94d39948> (a java.util.TaskQueue)
+        at java.lang.Object.wait(Object.java:485)
+        at java.util.TimerThread.mainLoop(Timer.java:483)
+        - locked <0xfffffffe94d39948> (a java.util.TaskQueue)
+        at java.util.TimerThread.run(Timer.java:462)
+
+"Timer-6" daemon prio=3 tid=0x0000000107289000 nid=0x14f in Object.wait() [0xfffffffe4087f000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+        at java.lang.Object.wait(Native Method)
+        - waiting on <0xfffffffe94f12590> (a java.util.TaskQueue)
+        at java.util.TimerThread.mainLoop(Timer.java:509)
+        - locked <0xfffffffe94f12590> (a java.util.TaskQueue)
+        at java.util.TimerThread.run(Timer.java:462)
+

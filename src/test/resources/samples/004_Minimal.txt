@@ -1,0 +1,38 @@
+blah
+
+blah
+
+
+
+2011-09-09 15:16:17
+Full thread dump Java HotSpot(TM) 64-Bit Server VM (15.3-b01 mixed mode):
+
+"control: Socket[addr=vm0103ussac1-2.cust.aops-eds.com/10.7.25.129,port=44963,localport=55634]" daemon prio=3 tid=0x000000010989a000 nid=0x3c4 runnable [0xfffffffe18d7e000]
+   java.lang.Thread.State: RUNNABLE
+	at java.net.SocketInputStream.socketRead0(Native Method)
+	at java.net.SocketInputStream.read(SocketInputStream.java:129)
+	at java.net.ManagedSocketInputStreamHighPerformance.read(ManagedSocketInputStreamHighPerformance.java:258)
+	at java.net.SocketInputStream.read(SocketInputStream.java:182)
+	at java.net.ManagedSocketInputStreamHighPerformance.read(ManagedSocketInputStreamHighPerformance.java:133)
+	at java.io.FilterInputStream.read(FilterInputStream.java:66)
+	at org.jboss.remoting.transport.bisocket.BisocketServerInvoker$ControlConnectionThread.run(BisocketServerInvoker.java:968)
+
+"control: Socket[addr=vm0112ussac1-2.cust.aops-eds.com/10.7.25.128,port=45246,localport=55632]" daemon prio=3 tid=0x000000010b08d800 nid=0x3c3 runnable [0xfffffffe1927e000]
+   java.lang.Thread.State: RUNNABLE
+	at java.net.SocketInputStream.socketRead0(Native Method)
+	at java.net.SocketInputStream.read(SocketInputStream.java:129)
+	at java.net.ManagedSocketInputStreamHighPerformance.read(ManagedSocketInputStreamHighPerformance.java:258)
+	at java.net.SocketInputStream.read(SocketInputStream.java:182)
+	at java.net.ManagedSocketInputStreamHighPerformance.read(ManagedSocketInputStreamHighPerformance.java:133)
+	at java.io.FilterInputStream.read(FilterInputStream.java:66)
+	at org.jboss.remoting.transport.bisocket.BisocketServerInvoker$ControlConnectionThread.run(BisocketServerInvoker.java:968)
+
+JNI global references: 2311
+
+Heap
+ par new generation   total 191744K, used 185976K [0xfffffffe50000000, 0xfffffffe5d000000, 0xfffffffe5d000000)
+  eden space 170496K,  96% used [0xfffffffe50000000, 0xfffffffe5a0de248, 0xfffffffe5a680000)
+  from space 21248K, 100% used [0xfffffffe5a680000, 0xfffffffe5bb40000, 0xfffffffe5bb40000)
+  to   space 21248K,   0% used [0xfffffffe5bb40000, 0xfffffffe5bb40000, 0xfffffffe5d000000)
+ concurrent mark-sweep generation total 3981312K, used 2740212K [0xfffffffe5d000000, 0xffffffff50000000, 0xffffffff50000000)
+ concurrent-mark-sweep perm gen total 275232K, used 165064K [0xffffffff50000000, 0xffffffff60cc8000, 0xffffffff70000000)

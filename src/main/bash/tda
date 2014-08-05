@@ -1,0 +1,27 @@
+#!/bin/bash
+
+reldir=`dirname $0`
+reldir=`cygpath -w ${reldir}`
+
+
+function main()
+{
+    local args;
+    while [ "$1" != "" ]; do
+        if [ "$1" = "--debug" ]; then
+            debug_args="-Xdebug -Xrunjdwp:transport=dt_shmem,server=y,suspend=y,address=run"
+        else
+            args="${args} $1"
+        fi
+        shift
+    done
+
+    jar_file=${reldir}/../lib/tdanalyzer.jar
+
+    [ "$OSTYPE" = "cygwin" ] && jar_file=`cygpath -w ${jar_file}`
+
+    ${JAVA_HOME}/bin/java ${debug_args} -jar "${jar_file}" ${args}
+
+}
+
+main $@

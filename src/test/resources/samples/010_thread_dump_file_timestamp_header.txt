@@ -1,0 +1,28 @@
+blah
+blah
+blah
+
+
+2010-12-14 01:02:03
+Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b01 mixed mode):
+
+"Thread-21" prio=3 tid=0x00000001069c4800 nid=0x81 in Object.wait() [0xfffffffe4537f000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	- waiting on <0xfffffffe7beb7660> (a java.lang.Object)
+	at com.arjuna.ats.internal.arjuna.recovery.PeriodicRecovery.doPeriodicWait(PeriodicRecovery.java:675)
+	at com.arjuna.ats.internal.arjuna.recovery.PeriodicRecovery.run(PeriodicRecovery.java:434)
+	- locked <0xfffffffe7beb7660> (a java.lang.Object)
+
+"VM Periodic Task Thread" prio=3 tid=0x0000000103dab000 nid=0x27 waiting on condition
+
+JNI global references: 2311
+
+Heap
+ par new generation   total 191744K, used 185976K [0xfffffffe50000000, 0xfffffffe5d000000, 0xfffffffe5d000000)
+  eden space 170496K,  96% used [0xfffffffe50000000, 0xfffffffe5a0de248, 0xfffffffe5a680000)
+  from space 21248K, 100% used [0xfffffffe5a680000, 0xfffffffe5bb40000, 0xfffffffe5bb40000)
+  to   space 21248K,   0% used [0xfffffffe5bb40000, 0xfffffffe5bb40000, 0xfffffffe5d000000)
+ concurrent mark-sweep generation total 3981312K, used 2740212K [0xfffffffe5d000000, 0xffffffff50000000, 0xffffffff50000000)
+ concurrent-mark-sweep perm gen total 275232K, used 165064K [0xffffffff50000000, 0xffffffff60cc8000, 0xffffffff70000000)
+

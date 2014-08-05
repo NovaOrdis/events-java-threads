@@ -1,0 +1,9 @@
+blah
+
+blah
+
+
+
+2011-09-09 15:16:17
+Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b01 mixed mode):
+this was supposed to be empty
