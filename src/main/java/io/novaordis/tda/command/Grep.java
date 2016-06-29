@@ -6,7 +6,7 @@ import io.novaordis.tda.SimplifiedLogger;
 import io.novaordis.tda.ThreadDefinition;
 import io.novaordis.tda.ThreadDump;
 import io.novaordis.tda.ThreadDumpFile;
-import io.novaordis.tda.UserException;
+import io.novaordis.tda.UserErrorException;
 
 import java.io.File;
 import java.text.Format;
@@ -45,32 +45,18 @@ public class Grep implements Command
     {
         this.log = log;
 
-        for(int i = 0; i < args.length; i ++)
-        {
-            String arg = args[i];
-
-            if ("-v".equals(arg))
-            {
+        for (String arg : args) {
+            if ("-v".equals(arg)) {
                 exclude = true;
-            }
-            else if ("-c".equals(arg))
-            {
+            } else if ("-c".equals(arg)) {
                 count = true;
-            }
-            else if ("-s".equals(arg))
-            {
+            } else if ("-s".equals(arg)) {
                 split = true;
-            }
-            else if (arg.startsWith("-"))
-            {
-                throw new Exception("NOT YET IMPLEMENTED EXCEPTION: 'grep' doesn't know how to handle " + args[i]);
-            }
-            else if (regex == null)
-            {
+            } else if (arg.startsWith("-")) {
+                throw new Exception("NOT YET IMPLEMENTED EXCEPTION: 'grep' doesn't know how to handle " + arg);
+            } else if (regex == null) {
                 regex = arg;
-            }
-            else if (threadDumpFile == null)
-            {
+            } else if (threadDumpFile == null) {
                 threadDumpFile = new ThreadDumpFile(arg);
             }
         }
@@ -83,7 +69,7 @@ public class Grep implements Command
 
         if (exclude && regex == null)
         {
-            throw new UserException("-v requires a regular expression");
+            throw new UserErrorException("-v requires a regular expression");
         }
     }
 
@@ -195,30 +181,31 @@ public class Grep implements Command
 
             Date timestamp = td.getTimestamp();
 
-            File splitFile;
-
-            if (timestamp != null)
-            {
-                splitFile = generateSplitFile(timestamp, f.getFile());
-            }
-            else
-            {
-                splitFile = generateSplitFile(counter ++, f.getFile());
-            }
+            File splitFile = generateSplitFile(counter ++, timestamp, f.getFile());
 
             log.info("writing " + splitFile.getName());
             td.toFile(splitFile);
         }
     }
 
-    private File generateSplitFile(Date timestamp, File f) throws Exception
+    /**
+     * @param timestamp may be null, in which case only the counter should be used. If not null, both the counter and
+     *                  timestamp will be used.
+     */
+    private File generateSplitFile(int counter, Date timestamp, File f) throws Exception
     {
-        return generateSplitFile(TIMESTAMP_PREFIX.format(timestamp), f);
-    }
+        String s = Integer.toString(counter);
+        if (counter < 10) {
+            s = "0" + s;
+        }
 
-    private File generateSplitFile(int counter, File f) throws Exception
-    {
-        return generateSplitFile(Integer.toString(counter), f);
+        if (timestamp != null) {
+
+            s += "-";
+            s += TIMESTAMP_PREFIX.format(timestamp);
+        }
+
+        return generateSplitFile(s, f);
     }
 
     private File generateSplitFile(String prefix, File f) throws Exception

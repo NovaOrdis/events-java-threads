@@ -5,7 +5,7 @@ package io.novaordis.tda;
  *
  * Copyright 2010 Ovidiu Feodorov
  */
-public class UserException extends Exception
+public class UserErrorException extends Exception
 {
     // Constants -----------------------------------------------------------------------------------
 
@@ -17,28 +17,28 @@ public class UserException extends Exception
 
     // Constructors --------------------------------------------------------------------------------
 
-    public UserException()
+    public UserErrorException()
     {
         super();
     }
 
-    public UserException(String message)
+    public UserErrorException(String message)
     {
         super(message);
     }
 
-    public UserException(String message, long lineNumber)
+    public UserErrorException(String message, long lineNumber)
     {
         super(message);
         this.lineNumber = lineNumber;
     }
 
-    public UserException(String message, Throwable cause)
+    public UserErrorException(String message, Throwable cause)
     {
         super(message, cause);
     }
 
-    public UserException(Throwable cause)
+    public UserErrorException(Throwable cause)
     {
         super(cause);
     }

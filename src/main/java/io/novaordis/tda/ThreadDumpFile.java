@@ -114,7 +114,7 @@ public class ThreadDumpFile
                     // syntactically correct
                     if (line.trim().length() != 0)
                     {
-                        throw new UserException("\"" + previous + "\" not followed by an empty line", lineNumber);
+                        throw new UserErrorException("\"" + previous + "\" not followed by an empty line", lineNumber);
                     }
 
                     expectEmptyLine = false;
@@ -168,7 +168,7 @@ public class ThreadDumpFile
             // first check for error conditions
             if (current.getThreadCount() == 0 && current.getHeader() != null)
             {
-                throw new UserException("Empty thread dump", current.getHeaderLineNumber());
+                throw new UserErrorException("Empty thread dump", current.getHeaderLineNumber());
             }
 
             if (current.getThreadCount() > 0)

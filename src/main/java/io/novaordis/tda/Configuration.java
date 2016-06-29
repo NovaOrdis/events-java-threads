@@ -33,6 +33,8 @@ class Configuration
             return;
         }
 
+        args = Util.coalesceQuotedStrings(args);
+
         // anything else is a Grep command
 
         c = new Grep(log, args);

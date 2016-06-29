@@ -81,7 +81,7 @@ public class GrepConfigurationTest extends Assert
             new Grep(null, args);
             fail("should fail, combination does not make sense");
         }
-        catch(UserException e)
+        catch(UserErrorException e)
         {
             log.info(e.getMessage());
         }
@@ -117,7 +117,7 @@ public class GrepConfigurationTest extends Assert
             new Grep(null, args);
             fail("should fail, combination does not make sense");
         }
-        catch(UserException e)
+        catch(UserErrorException e)
         {
             log.info(e.getMessage());
         }

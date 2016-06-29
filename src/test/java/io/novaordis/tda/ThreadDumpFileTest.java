@@ -103,9 +103,9 @@ public class ThreadDumpFileTest extends Assert
         try
         {
             new ThreadDumpFile("./src/test/resources/samples/002_1_FullThreadDumpOnFirstLine.txt");
-            fail("should have failed with UserException");
+            fail("should have failed with UserErrorException");
         }
-        catch(UserException e)
+        catch(UserErrorException e)
         {
             log.info(e.getMessage());
             assertEquals(1, e.getLineNumber());
@@ -136,9 +136,9 @@ public class ThreadDumpFileTest extends Assert
         try
         {
             new ThreadDumpFile("./src/test/resources/samples/003_FullThreadDumpInvalidTimestamp.txt");
-            fail("should have failed with UserException");
+            fail("should have failed with UserErrorException");
         }
-        catch(UserException e)
+        catch(UserErrorException e)
         {
             log.info(e.getMessage());
             assertEquals(5, e.getLineNumber());
@@ -151,9 +151,9 @@ public class ThreadDumpFileTest extends Assert
         try
         {
             new ThreadDumpFile("./src/test/resources/samples/005_NoEmptyLine.txt");
-            fail("should have failed with UserException");
+            fail("should have failed with UserErrorException");
         }
-        catch(UserException e)
+        catch(UserErrorException e)
         {
             log.info(e.getMessage());
             assertEquals(9, e.getLineNumber());
