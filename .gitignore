@@ -1,3 +1,4 @@
 target
 IntelliJ/*.iws
 workspace.xml
+.DS_Store

@@ -24,22 +24,48 @@ Global Options:
 
 Commands:
 
-    install [-f|--force]
-
     release <info|snapshot|minor|major|patch|"version-string">
 
         If 'info' is used, returns the current version information.
 
-        Makes a release by incrementing the release information appropriately, running all tests, building the final
-        artifact and installing the artifact in the appropriate repository.
+        Makes a release by incrementing the release information appropriately, running all tests,
+        tagging the repository, building the final artifact and installing the artifact in the
+        appropriate artifact repository.
 
-        If 'snapshot' is used, and the current release is a dot release, it will be incremented to the next patch
-        snapshot release. If the current release is a snapshot release, the snapshot counter will be simply
-        incremented.
+        If 'snapshot' is used, and the current release is a dot release, it will be incremented to
+        the next patch snapshot release. If the current release is a snapshot release, the
+        snapshot counter will be simply incremented.
 
-        If a version string is used, the string is checked for consistency. The release process will fail if the
-        version string is invalid or represents an older version than the current version. The repository can be
-        the local Maven repository, a directory, a remote server, etc.
+        If a version string is used, the string is checked for consistency. The release process
+        will fail if the version string is invalid or represents an older version than the current
+        version. The repository can be the local Maven repository, a directory, a remote server,
+        etc.
+
+        Upon release, the changes will be checked into the source repository, and a
+        'release-<version>' tag will be applied, unless the release is a snapshot, in which case the
+        repository won't be tagged. The changes will be pushed into the remote repository.
+
+        Also see https://kb.novaordis.com/index.php/Public_Release_Procedure_for_Projects
+
+        Options:
+
+        --no-push - changes won't be pushed into the remote repository. Useful when the release
+          process takes place offline. The changes will have to be manually pushed later.
+
+        --no-tests - won't run the test suite upon release. Not usually recommended, unless we're
+          releasing a snapshot.
+
+    build
+
+        Build the "releasable" artifact,  which usually is a self-contained, ready-to-install zip.
+        In case of a library,  is the JAR file (or the library)  as installed in a repository such
+        as Maven.
+
+    install [-f|--force]
+
+         Options:
+
+        --force - overwrites an already installed version.
 
      test - internal release tools testing shortcut. Advanced users only.
 
@@ -47,10 +73,11 @@ Installation:
 
     ./src/main/bash/operations install-release-tools <project-home-directory>
 
-        The installation functionality can currently only be accessed from the original repository.
-        'install-release-tools' installs the release tools into the 'bin' subdirectory of the specified project home
-        directory. A target directory qualifies as "project home directory" if it has a Maven pom.xml in it. If an
-        older version of the release tools is already installed, 'install-release-tools' will upgrade in place.
+        The installation functionality can currently only be accessed from the original
+        repository. 'install-release-tools' installs the release tools into the 'bin' subdirectory
+        of the specified project home directory. A target directory qualifies as "project home
+        directory" if it has a Maven pom.xml in it. If an older version of the release tools is
+        already installed, 'install-release-tools' will upgrade in place.
 
 Per-Project Configuration:
 
@@ -83,7 +110,7 @@ function main() {
         ((i++))
     done
 
-    [ "${command}" = "" ] && { usage; exit 0; }
+    [ "${command}" = "" -o "${arguments[0]}" = "--help" ] && { usage; exit 0; }
 
     #
     # set project home
@@ -241,7 +268,7 @@ function get-project-name() {
 }
 
 #
-# returns the project version as specified in the pom.xml file
+# Returns the project version as specified in the pom.xml file, at stdout
 #
 function get-version() {
 
@@ -260,9 +287,14 @@ function get-version() {
 }
 
 #
-# replaces the version string in pom.xml with the version given as argument
+# Replaces the version string in pom.xml with the version given as argument, if they are different.
+# There are cases when set version is a noop, for example when releasing the current snapshot: the
+# POM file already contains the correct version, and subsequent functions will increment it to the
+# appropriate post-release "current" version.
 #
 function set-version() {
+
+    debug-arguments "$@"
 
     local version=$1
     [ -z "${version}" ] && fail "'version' not specified"
@@ -271,22 +303,37 @@ function set-version() {
     [ -z "${pom_file}" ] && pom_file=${project_home}/pom.xml
     [ -f ${pom_file} ] || fail "pom.xml file ${pom_file} not found"
 
+    local current_version
+    current_version=$(get-version) || fail "failed to get the current version from pom.xm"
+
+    if [ "${version}" = "${current_version}" ]; then
+        debug "the provided version ${version} and the current pom.xml version are identical"
+        return 0
+    fi
+
     #
-    # replace the first occurrence of <version>...</version> with our version
+    # if different, replace the first occurrence of <version>...</version> with our version
     #
 
+    debug "inserting version ${version}"
+
     local tmp_file=./.tmp
-    sed -e '1,/^ *<version>.*<\/version> *$/s/^\( *<version>\).*\(<\/version> *\)$/\1'${version}'\2/' ${pom_file} > ${tmp_file} || \
+
+    sed -e '1,/^ *<version>.*<\/version> */s/^\( *<version>\).*\(<\/version> *\)/\1'${version}'\2/' ${pom_file} > ${tmp_file} || \
         fail "failed to perform sed replacement"
+
     diff -q ${pom_file} ${tmp_file} > /dev/null && fail "no replacement was made in ${pom_file}"
     mv ${tmp_file} ${pom_file} || fail "failed to restore ${pom_file} from ${tmp_file}"
 }
 
-# mode can be 'major', 'minor', 'patch', 'snapshot' or a full version string.
-# If a full version string is provided, the function will verify that is a valid version string and the version it
-# specifies if newer than the current version.
-# Sends the version string at stdout.
-function compute-next-version() {
+#
+# gets the current version as declared in POM and computes the version for the release
+# being processed. 'mode' can be "major", "minor", "patch", "snapshot" or a full version
+# string. If a full version string is provided, the function will verify that is a valid
+# version string and the version it specifies if newer than the current version. Sends
+# the version string at stdout.
+#
+function compute-release-version() {
 
     debug-arguments "$@"
 
@@ -308,13 +355,39 @@ function compute-next-version() {
     debug "major=${major}, minor=${minor}, patch=${patch}, snapshot=${snapshot}"
 
     if [ "${mode}" = "major" ]; then
-        major=$(expr ${major} + 1) || exit 1
+        #
+        # only increment if we're not a snapshot
+        #
+        if [ -z "${snapshot}" ]; then
+            major=$(expr ${major} + 1) || exit 1
+        fi
         minor=""
         patch=""
         snapshot=""
     elif [ "${mode}" = "minor" ]; then
+
         [ -z "${minor}" ] && minor=0
-        minor=$(expr ${minor} + 1) || exit 1
+        if [ -n "${snapshot}" ]; then
+            #
+            # we're a snapshot
+            #
+            if [ -n "${patch}" ]; then
+                #
+                # we're a patch snapshot, so increment the minor
+                #
+                minor=$(expr ${minor} + 1) || exit 1
+            else
+                debug "we're a minor snapshot, we don't increment the minor"
+                #
+                # we're a minor snaps
+                #
+            fi
+        else
+            #
+            # we're not a snapshot
+            #
+            minor=$(expr ${minor} + 1) || exit 1
+        fi
         patch=""
         snapshot=""
     elif [ "${mode}" = "patch" ]; then
@@ -327,7 +400,14 @@ function compute-next-version() {
         fi
         snapshot=""
     elif [ "${mode}" = "snapshot" ]; then
-        if [ -z "${snapshot}" ]; then
+        if [ -n "${snapshot}" ]; then
+            #
+            # the current version is a snapshot, releasing a snapshot means releasing
+            # the current snapshot we were working on and incrementing the snapshot
+            # number.
+            #
+            debug "the current snapshot ${snapshot} is being released"
+        else
             #
             # current release is a dot release, increment to the next patch snapshot 1
             #
@@ -340,11 +420,6 @@ function compute-next-version() {
             else
                 patch=$(expr ${patch} + 1) || exit 1
             fi
-        else
-            #
-            # regular snapshot
-            #
-            snapshot=$(expr ${snapshot} + 1) || exit 1
         fi
     else
         local new_version=${mode}
@@ -408,6 +483,52 @@ function compute-next-version() {
         snapshot=${new_snapshot}
     fi
 
+    assemble-version-string "${major}" "${minor}" "${patch}" "${snapshot}"
+}
+
+#
+# gets the current version as declared in POM and computes the next patch snapshot.
+#
+
+function compute-next-version() {
+
+    debug-arguments "$@"
+
+    local current_version=$1
+    [ -z "${current_version}" ] && fail "'current_version' not specified"
+
+    local major
+    local minor
+    local patch
+    local snapshot
+
+    major=$(extract-version-component major ${current_version}) || exit 1
+    minor=$(extract-version-component minor ${current_version}) || exit 1
+    patch=$(extract-version-component patch ${current_version}) || exit 1
+    snapshot=$(extract-version-component snapshot ${current_version}) || exit 1
+
+    debug "major=${major}, minor=${minor}, patch=${patch}, snapshot=${snapshot}"
+
+    #
+    # we calculate the next logical snapshot
+    #
+    if [ -n "${snapshot}" ]; then
+        #
+        # we're a snapshot, increment it
+        #
+        snapshot=$(expr ${snapshot} + 1) || exit 1
+    else
+        #
+        # we're not a snapshot, increment the version to the next patch and initiate snapshot 1
+        #
+        if [ -z "${patch}" ]; then
+            patch=1
+        else
+            patch=$(expr ${patch} + 1) || exit 1
+        fi
+        [ -z "${minor}" ] && minor=0
+        snapshot=1
+    fi
     assemble-version-string "${major}" "${minor}" "${patch}" "${snapshot}"
 }
 
@@ -562,8 +683,9 @@ function get-artifact-base-name()
 }
 
 #
-# returns the artifact file name, as it will be generated by Maven, including base name, optionally version and
-# extension. It's either 'finalName' + extension (if exists) or 'artifactId' + version + extension.
+# returns the artifact file name (not the path), as it will be generated by Maven, including base name, optionally
+# version and extension. It's either 'finalName' + extension (if exists) or 'artifactId' + version + extension.
+# If built, the artifact file name is typically located under ${project_home}/target
 #
 function get-artifact-file-name()
 {
@@ -703,15 +825,13 @@ function get-dependencies()
 #
 function build-release-zip-file() {
 
+    debug-arguments $@
+
+    [ -z ${project_home} ] && fail "global variable 'project_home' not defined"
+
     local artifact_path=${project_home}/target/$(get-artifact-file-name)
 
     [ ! -f ${artifact_path}  ] && fail "project artifact $(get-artifact-file-name) not found - build the project manually"
-
-#    local skip_tests_arg
-#    ${no_tests} && skip_tests_arg="-Dmaven.test.skip=true"
-#    local maven_quiet="-q"
-#    ${verbose} && maven_quiet=""
-#    (cd ${project_home}; mvn ${maven_quiet} clean package ${skip_tests_arg}) && debug "mvn ${maven_quiet} clean package ${skip_tests_arg}" || exit 1
 
     local zip_file_base_name=$(get-artifact-base-name)-$(get-version)
     local zip_root_dir=${project_home}/target/${zip_file_base_name}
@@ -731,6 +851,14 @@ function build-release-zip-file() {
         fail "failed to create zip root directory ${zip_root_dir}/bin"
     cp ${artifact_path} ${zip_root_dir}/lib && \
         debug "copied $(basename ${artifact_path}) in ${zip_root_dir}/lib" || exit 1;
+
+    # copy the processed resource files into lib
+    for i in ${project_home}/src/main/resources/*; do
+        i=$(basename ${i})
+        cp ${project_home}/target/classes/${i} ${zip_root_dir}/lib && \
+            debug "${project_home}/target/classes/${i} in ${zip_root_dir}/lib" || exit 1;
+    done
+
     cp ${project_home}/src/main/bash/* ${zip_root_dir}/bin && \
         debug "copied scripts to ${zip_root_dir}/bin" || exit 1;
     configure-run-wrapper ${zip_root_dir}/bin && \
@@ -828,14 +956,16 @@ function install-release() {
 
     debug-arguments "$@"
 
-    [ -z "${release_repository}" ] && \
-        fail "'release_repository' not defined. Check your local configuration file ${configuration_file}"
-
-    debug "release repository: ${release_repository}"
-
     local release_file_path=$1
     [ -z "${release_file_path}" ] && fail "'release_file' not provided"
     [ -f ${release_file_path} ] || fail "the release file ${release_file_path} does not exist"
+
+    debug "release repository: ${release_repository}"
+
+    if [ -z "${release_repository}" ]; then
+        info "no 'release_repository' defined in ${configuration_file}, the binary release available as ${release_file_path} ..."
+        return 0
+    fi
 
     local target_file=${release_repository}/$(basename ${release_file_path})
 
@@ -849,8 +979,12 @@ function install-release() {
 # return 0 if the configured release_repository is LOCAL_MAVEN
 function is-local-maven-release() {
 
-    [ -z "${release_repository}" ] && \
-        fail "'release_repository' not defined. Check your local configuration file ${configuration_file}"
+    if [ -z "${release_repository}" ]; then
+        #
+        # no ${release_repository} defined, that means we'll handle the binary artifact manually
+        #
+        return 1
+    fi
 
     [ "${release_repository}" = "LOCAL_MAVEN" ] && return 0 || return 1
 }
@@ -893,7 +1027,7 @@ function do-install-release-tools() {
     #
     # these are the links to ./operations that are going to be created in ./bin
     #
-    local links="install release test";
+    local links="release build install test";
     # create symbolic links
     (cd ${bin_dir}; \
         for link in ${links}; \
@@ -950,9 +1084,189 @@ EOF
     fi
 }
 
-function do-test() {
+#
+# expects all its arguments in the "arguments" global array
+#
+function do-release() {
 
-    compute-next-version ${arguments[0]} ${arguments[1]}
+    #
+    # process arguments
+    #
+
+    local mode # 'snapshot'|'minor'|'major'|'patch' or version string
+
+    #
+    # options:
+    #
+    #  --no-push
+    #  --no-tests
+    #
+
+    local do_push_option=true
+    local run_tests_option=true
+
+    local i=0
+    while [ ${i} -lt ${#arguments[*]} ]; do
+        local arg=${arguments[${i}]}
+        debug "do-release arg ${i}: ${arg}"
+        if [ -z "${mode}" ]; then
+            mode=${arg}
+        fi
+        if [ "${arg:0:2}" = "--" ]; then
+            if [ "--no-push" = ${arg} ]; then
+                do_push_option=false
+            elif [ "--no-tests" = ${arg} ]; then
+                run_tests_option=false
+            else
+                fail "unknown option: ${arg}"
+            fi
+        fi
+        ((i++))
+    done
+
+    debug "do_push_option: ${do_push_option}"
+
+    #
+    # checking pre-requisites
+    #
+
+    [ -z "${mode}" ] && fail "info|snapshot|minor|major|patch or the version string must be specified"
+
+    local current_version
+    current_version=$(get-version) || exit 1
+    debug "current version: ${current_version}"
+
+    if [ "${mode}" = "info" ]; then
+        # report the current version and exit
+        info "current version: ${current_version}"
+        return 0
+    fi
+
+    local release_version
+    release_version=$(compute-release-version "${current_version}" "${mode}") || exit 1
+
+    debug "release version ${release_version}"
+
+    yes "releasing ${release_version}, is this OK?" || { info "release canceled, no files were changed"; return 0; }
+
+    set-version ${release_version}
+
+    #
+    # run the tests with the new version
+    #
+
+    if ${run_tests_option}; then
+        mvn clean test || fail "test suite failed after version increment, manual intervention required"
+    fi
+
+    #
+    # tag repository
+    #
+
+    git add . && info "git add ok" || fail "git add . failed"
+
+    #
+    # there may be nothing to commit, so we don't fail on commit failure, we just warn
+    #
+
+    git commit -m "release ${release_version}" && info "git commit ok" || warn "git commit did not succeed, maybe because there was nothing to commit"
+
+    local tag=release-${release_version}
+    local tagged
+
+    if [[ ${tag} =~ SNAPSHOT ]]; then
+        #
+        # only tag repository if we're not a snapshot
+        #
+        info "current release is a snapshot, won't tag the repository"
+        tagged=false
+    else
+        git tag -m "release ${release_version}" "${tag}" && info "git tag ok, tagged with ${tag}" || fail "git tag failed"
+        tagged=true
+    fi
+
+    if ${do_push_option}; then
+        git push --follow-tags && info "git push ok" || fail "git push failed"
+    else
+        info "got --no-push, we don't push to the remote repository"
+    fi
+
+    local release_binary_artifact
+    local maven_testing_configuration=""
+    ! ${run_tests_option} &&  maven_testing_configuration="-Dmaven.test.skip=true"
+
+    if is-local-maven-release; then
+        mvn ${maven_testing_configuration} clean install || \
+            fail "failed to pass tests, must restore the version in pom.xml to ${current_version} manually"
+
+        release_binary_artifact=${project_home}/target/$(get-artifact-file-name)
+        [ -f ${release_binary_artifact} ] || \
+            fail "release binary artifact ${release_binary_artifact} not found, something went wrong with the maven build process"
+
+    else
+        #
+        # we need to do install and not package because we may need the JAR in the Maven repository as well
+        #
+        mvn ${maven_testing_configuration} clean install || \
+            fail "failed to pass tests, must restore the version in pom.xml to ${current_version} manually"
+        release_binary_artifact=$(build-release-zip-file) || exit 1
+        install-release ${release_binary_artifact}
+    fi
+
+    #
+    # increment locally to the next patch snapshot
+    #
+    current_version=$(get-version)
+    local next_local_version
+    next_local_version=$(compute-next-version "${current_version}" snapshot) || exit 1
+    debug "next local version ${next_local_version}"
+
+    yes "setting next local version ${next_local_version}, is this OK?" || return 0;
+    set-version ${next_local_version}
+
+    local msg="A new ${mode} version (${release_version}) was released"
+
+    if ${tagged}; then
+        msg="${msg}, committed to repository and tagged."
+    else
+        msg="${msg} and committed to repository."
+    fi
+
+    info ""
+    info "RELEASE SUMMARY:"
+    info ""
+    info ${msg}
+    info "If you want to create an official GitHub release, use tag \"${tag}\" and binary $(basename ${release_binary_artifact})."
+    info "The local version has been incremented to ${next_local_version}."
+    info ""
+}
+
+#
+# expects all its arguments in the "arguments" global array
+#
+function do-build() {
+
+    #
+    # process arguments
+    #
+
+    #
+    # options:
+    #
+    #  --
+    #
+
+    local force=false
+
+    local i=0
+    while [ ${i} -lt ${#arguments[*]} ]; do
+        local arg=${arguments[${i}]}
+        debug "do-build arg ${i}: ${arg}"
+        ((i++))
+    done
+
+    local release_zip_file_path
+    release_zip_file_path=$(build-release-zip-file) || exit 1
 }
 
 #
@@ -962,6 +1276,12 @@ function do-install() {
 
     #
     # process arguments
+    #
+
+    #
+    # options:
+    #
+    #  --force
     #
 
     local force=false
@@ -982,8 +1302,7 @@ function do-install() {
 
     [ -z ${RUNTIME_DIR} ] && fail "RUNTIME_DIR environment variable not set, don't know where to install"
 
-    debug "checking whether the project installation zip has been built ..."
-
+    debug "building the releasable artifact ..."
     local release_zip_file_path
     release_zip_file_path=$(build-release-zip-file) || exit 1
 
@@ -993,73 +1312,9 @@ function do-install() {
     info "installed $(basename ${installed_path}) in $(dirname ${installed_path})"
 }
 
-#
-# expects all its arguments in the "arguments" global array
-#
-function do-release() {
+function do-test() {
 
-    #
-    # process arguments
-    #
-
-    local mode # 'snapshot'|'minor'|'major'|'patch' or version string
-
-    local i=0
-    while [ ${i} -lt ${#arguments[*]} ]; do
-        local arg=${arguments[${i}]}
-        debug "do-release arg ${i}: ${arg}"
-        if [ -z "${mode}" ]; then
-            mode=${arg}
-        fi
-        ((i++))
-    done
-
-    #
-    # checking pre-requisites
-    #
-
-    [ -z "${mode}" ] && fail "info|snapshot|minor|major|patch or the version string must be specified"
-
-    local current_version
-    current_version=$(get-version) || exit 1
-    debug "current version: ${current_version}"
-
-    if [ "${mode}" = "info" ]; then
-        # report the current version and exit
-        info "current version: ${current_version}"
-        return 0
-    fi
-
-    local next_version
-    next_version=$(compute-next-version "${current_version}" "${mode}") || exit 1
-    debug "next version ${next_version}"
-
-    yes "releasing ${next_version}, is this OK?" || { info "release canceled, no files were changed"; return 0; }
-
-    set-version ${next_version}
-
-    #
-    # If we release externally (as a zip file), we only need to create the JAR locally in the project, so we package.
-    # If we release to LOCAL_MAVEN, we install
-    #
-
-    if is-local-maven-release; then
-        mvn clean install || fail "failed to pass tests, must restore the version in pom.xml to ${current_version} manually"
-    else
-        mvn clean package || fail "failed to pass tests, must restore the version in pom.xml to ${current_version} manually"
-        local release_zip_file_path
-        release_zip_file_path=$(build-release-zip-file) || exit 1
-        install-release ${release_zip_file_path}
-    fi
-
-    info ""
-    info "###########################################################################################"
-    info "#"
-    info "#    A new ${mode} version (${next_version}) was released locally, you may want to commit and push git #"
-    info "#"
-    info "###########################################################################################"
-    info ""
-
+    compute-next-version ${arguments[0]} ${arguments[1]}
 }
 
 main $@
