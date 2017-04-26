@@ -8,7 +8,7 @@
 
 reldir=$(dirname $0)
 home_dir=${reldir}/..
-main_class=${main_class}
+main_class=io.novaordis.tda.Main
 memory=1024m
 
 verbose=false
@@ -129,7 +129,7 @@ background=false
 do_kill=false
 
 while [ "$1" != "" ]; do
-    if [ "$1" = "--debug" ]; then
+    if [ "$1" = "--debug" -o "$1" = "-d" ]; then
         debug_args="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5011"
         verbose=true
     elif [ "$1" = "--verbose" ]; then
@@ -180,15 +180,7 @@ command="${java_bin} -Xms${memory} -Xmx${memory} -cp ${classpath} ${debug_args} 
 
 ${verbose} && echo "${command}" 1>&2;
 
-if ${background}; then
-    nohup ${command} 1>./gld.log 2>&1 < /dev/null &
-    pid=$!
-    echo "gld launched in background (pid ${pid}), use gld stop|status to interact with it"
-    sleep 1
-else
-    ${command}
-fi
-
+${command}
 
 
 

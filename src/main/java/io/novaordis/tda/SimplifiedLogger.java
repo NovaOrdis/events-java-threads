@@ -5,8 +5,8 @@ package io.novaordis.tda;
  *
  * Copyright 2010 Ovidiu Feodorov
  */
-public interface SimplifiedLogger
-{
+public interface SimplifiedLogger {
+
     void info(String s);
     void error(String s);
 }

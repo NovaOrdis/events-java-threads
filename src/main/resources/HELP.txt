@@ -1,22 +1,23 @@
 
 Usage:
 
-    tda [options] [regex] <thread-dump-file>
+    tda [options] <regex|command> <thread-dump-file> [thread-dump-file, ...]
 
-    java -jar tdanalyzer.jar [options] [regex] <thread-dump-file>
+    java -jar tdanalyzer.jar [options] <regex|command> <thread-dump-file> [thread-dump-file, ...]
 
 The utility processes the thread dump file sequentially, one thread dump at a time, filtering the
 thread stacks based on the given regexp and combination of options. More than one thread dump in a
 single file are supported. The filtered thread dump or the scalar result are displayed at stdout.
 
-The simplest possible usage is to filter and display at standard output only the stack traces that
-match the given regular expression. For example:
+The default command, and simplest possible usage is to filter and display at standard output only
+the stack traces that match the given regular expression. For example:
 
     tda http- thread-dump-file.txt
 
 will display at stdout only the stack traces that contain "http-".
 
-Options: -----------------------------------------------------------------------------------------
+
+Options:
 
     -v <regex> <thread-dump-file> - sequentially reads the thread dump file and outputs
             at stdout all thread dumps that DO NOT contain the regular expression.
@@ -36,11 +37,25 @@ Options: -----------------------------------------------------------------------
     --<ExtensionClassName> (example --FSI, --FFM) where the class should be available in
             com/novaordis/universus/tdanalyzer/extensions
 
-Regular Expression Syntax: -----------------------------------------------------------------------
+
+
+Regular Expression Syntax:
 
 tda is designed to use the same regular expressions as grep.
 
     Spaces - enclosing the regular expression in double quotes preserves spaces. Example
 
             tda "on object monitor" thread-dump-file.txt
+
+
+
+Other commands:
+
+    diff <thread-dump-file-1> <thread-dump-file-2> shows the difference between the thread dumps.
+
+    help
+
+    version
+
+
 

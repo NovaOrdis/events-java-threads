@@ -20,42 +20,47 @@ import java.util.List;
  *
  * Copyright 2010 Ovidiu Feodorov
  */
-public class ThreadDumpFile
-{
-    // Constants -----------------------------------------------------------------------------------
+public class ThreadDumpFile {
+
+    // Constants -------------------------------------------------------------------------------------------------------
 
     public static final String THREAD_DUMP_HEADER = "Full thread dump";
     public static final String TIMESTAMP_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
     public static final Format TIMESTAMP_FORMAT = new SimpleDateFormat(TIMESTAMP_FORMAT_STRING);
 
-    // Static --------------------------------------------------------------------------------------
+    // Static ----------------------------------------------------------------------------------------------------------
 
-    // Attributes ----------------------------------------------------------------------------------
+    // Attributes ------------------------------------------------------------------------------------------------------
 
     private File file;
 
     private List<ThreadDump> threadDumps;
 
-    // Constructors --------------------------------------------------------------------------------
+    // Constructors ----------------------------------------------------------------------------------------------------
 
     /**
      * @param fileName a thread dump file name
      */
-    public ThreadDumpFile(String fileName) throws Exception
-    {
-        this.file = new File(fileName);
+    public ThreadDumpFile(String fileName) throws Exception {
 
-        if (!file.isFile())
-        {
-            throw new FileNotFoundException("no such file '" + fileName + "'");
+        this(new File(fileName));
+    }
+
+    public ThreadDumpFile(File file) throws Exception {
+
+        this.file = file;
+
+        if (!file.isFile()) {
+
+            throw new FileNotFoundException("no such file '" + file + "'");
         }
 
-        threadDumps = new ArrayList<ThreadDump>();
+        threadDumps = new ArrayList<>();
 
         parse(file);
     }
 
-    // Public --------------------------------------------------------------------------------------
+    // Public ----------------------------------------------------------------------------------------------------------
 
     public Iterator<ThreadDump> iterator()
     {

@@ -1,5 +1,8 @@
 package io.novaordis.tda;
 
+import java.io.BufferedReader;
+import java.io.StringReader;
+
 /**
  * @author <a href="mailto:ovidiu@novaordis.com">Ovidiu Feodorov</a>
  *
@@ -11,35 +14,73 @@ public class ThreadDefinition
 
     // Static --------------------------------------------------------------------------------------
 
-    // Attributes ----------------------------------------------------------------------------------
+    // Attributes ------------------------------------------------------------------------------------------------------
 
     private StringBuffer original;
     private String oneLine;
     private String firstLine;
     private String name;
 
-    // Constructors --------------------------------------------------------------------------------
+    // Constructors ----------------------------------------------------------------------------------------------------
 
-    public ThreadDefinition()
-    {
+    public ThreadDefinition() {
+
         original = new StringBuffer();
         oneLine = "";
     }
 
-    // Public --------------------------------------------------------------------------------------
+    /**
+     * @param lineNumber the line number the content starts at. 1-based.
+     *
+     * @param content the multi-line content
+     */
+    public ThreadDefinition(long lineNumber, String content) throws Exception {
 
-    public boolean isEmpty()
-    {
+        this();
+
+        BufferedReader br = null;
+
+        try {
+
+            br = new BufferedReader(new StringReader(content));
+
+            String line;
+
+            while((line = br.readLine()) != null) {
+
+                append(line, lineNumber ++);
+            }
+        }
+        finally {
+
+            if (br != null) {
+
+                br.close();
+            }
+
+        }
+    }
+
+    // Public ----------------------------------------------------------------------------------------------------------
+
+    /**
+     * Will return null if thread definition is invalid.
+     */
+    public String getName() {
+        return name;
+    }
+
+
+    public boolean isEmpty() {
         return original.length() == 0;
     }
 
     /**
      * Anything matches a null regexp.
      */
-    public boolean matches(String regex)
-    {
-        return regex == null || oneLine.indexOf(regex) != -1;
+    public boolean matches(String regex) {
 
+        return regex == null || oneLine.indexOf(regex) != -1;
     }
 
     public String getOriginal()
@@ -48,8 +89,7 @@ public class ThreadDefinition
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return name == null ? "INVALID THREAD DEFINITION" : name;
     }
 
@@ -58,8 +98,7 @@ public class ThreadDefinition
     /**
      * Appends a line.
      */
-    void append(String line, long lineNumber) throws Exception
-    {
+    void append(String line, long lineNumber) throws Exception {
         if (firstLine == null)
         {
             firstLine = line;
@@ -84,14 +123,6 @@ public class ThreadDefinition
         original.setLength(0);
         firstLine = null;
         oneLine = null;
-    }
-
-    /**
-     * Will return null if thread definition invalid.
-     */
-    String getName()
-    {
-        return name;
     }
 
     // Protected -----------------------------------------------------------------------------------
