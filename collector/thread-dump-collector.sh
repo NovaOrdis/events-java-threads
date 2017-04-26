@@ -17,7 +17,7 @@ dir=.
 #
 # the interval (in seconds) between successive readings
 #
-interval=2
+interval=30
 
 #
 # regular expression used to select the java process we want to take thread dumps of
@@ -47,13 +47,20 @@ where
 
             java.*myjar\.jar
 
+    --interval=<interval-in-secs> the interval between successive readings, in seconds.
+      The default value is 30 seconds.
+
 All configuration parameters specified described are also declared in the script itself and
 have the defaults mentioned in their description. If a configuration parameter is declared
 on command line, that value takes precedence over the one declared in the script.
 
+Auxiliary commands:
+
+    help - this help
+
+    pid - displays the PID that will be used by jstack
 
 EOF
-
 }
 
 function java-pid() {
@@ -70,20 +77,33 @@ function java-pid() {
 
 function main() {
 
+    local command
+
     while [ -n "$1" ]; do
 
         if [ "$1" = "help" -o "$1" = "--help" -o "$1" = "-help" -o "$1" = "-?" ]; then
-            help;
-            exit 0;
+            command="help"
         elif [[ "$1" =~ --dir= ]]; then
             dir=${1:6}
             [ -z "${dir}" ] && { echo "a value must follow --dir=" 1>&2; exit 1; }
             dir=${dir//\~/${HOME}}
         elif [[ "$1" =~ --regex= ]]; then
             regex=${1:8}
+        elif [[ "$1" =~ --interval= ]]; then
+            interval=${1:11}
+        elif [ "$1" = "pid" ]; then
+            command="pid"
         fi
         shift
     done
+
+    if [ "${command}" = "help" ]; then
+        help
+        return 0
+    elif [ "${command}" = "pid" ]; then
+        java-pid "${regex}"
+        return 0
+    fi
 
     [ -z "${JAVA_HOME}" ] && { echo "[error]: JAVA_HOME environment variable not set" 1>&2; exit 1; }
 
