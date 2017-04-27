@@ -149,7 +149,7 @@ function main() {
             echo -n "collecting thread dumps in ${dir}, interval ${interval} seconds "
             first=false
         fi
-        
+
         echo -n "."
         sleep ${interval}
     done
