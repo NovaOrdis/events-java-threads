@@ -31,9 +31,10 @@ function help() {
 
 cat <<EOF
 
-A script that invokes jstack periodically and collects thread dumps in a target directory.
-The script expects to find JAVA_HOME set to the correct value, and it will use the jstack
-utility present under that directory.
+A script that invokes jstack periodically on the java process selected by a regular expression
+applied to the process list. The thread dumps are collected in the specified target directory.
+The script expects to find  JAVA_HOME set to the correct value,  and it will used JAVA_HOME to
+locate jstack in \$JAVA_HOME/bin.
 
 Usage:
 
