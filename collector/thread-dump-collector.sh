@@ -133,6 +133,8 @@ function main() {
 
     dir=$(create-directory-if-does-not-exist "${dir}") || exit 1
 
+    first=true
+
     while [ true ]; do
 
         local java_pid
@@ -142,6 +144,12 @@ function main() {
         file_name="${file_name}-${java_pid}.jstack"
         ${JAVA_HOME}/bin/jstack -l ${java_pid} 2>&1 > ${dir}/${file_name} || \
             { echo "[error]: failed to run ${JAVA_HOME}/bin/jstack -l ${java_pid}" 1>&2; exit 1; }
+
+        if ${first}; then
+            echo -n "collecting thread dumps in ${dir}, interval ${interval} seconds "
+            first=false
+        fi
+        
         echo -n "."
         sleep ${interval}
     done
