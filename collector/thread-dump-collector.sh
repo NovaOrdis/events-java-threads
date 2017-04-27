@@ -133,10 +133,6 @@ function main() {
 
     dir=$(create-directory-if-does-not-exist "${dir}") || exit 1
 
-    echo ${dir}
-
-    exit 0
-
     while [ true ]; do
 
         local java_pid
