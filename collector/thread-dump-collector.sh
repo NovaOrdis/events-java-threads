@@ -10,9 +10,11 @@ version=1
 #
 
 #
-# the directory to write thread dumps into. If it does not exist, it will be created
+# the directory to write thread dumps into. If it does not exist, it will be created; the default
+# behavior if not specified is to create a dated sub-directory in the current directory every
+# time the script is executed.
 #
-dir=.
+dir=
 
 #
 # the interval (in seconds) between successive readings
@@ -22,7 +24,7 @@ interval=30
 #
 # regular expression used to select the java process we want to take thread dumps of
 #
-regex="java.*something relevant about our java process"
+regex="java.*D.Standalone"
 
 
 function help() {
@@ -35,12 +37,14 @@ utility present under that directory.
 
 Usage:
 
-    ./thread-dump-collector.sh --dir=<target-directory>
+    ./thread-dump-collector.sh [--dir=<target-directory>] [--regex=...] [--interval=<secs>]
 
 where
 
     --dir=<target-directory> specifies the directory to write the thread dump files into.
-      If the directory does not exist, it will be created.
+      If the directory does not exist, it will be created. If the configuration option is
+      not explicitly specified,  the default behavior is to create  a dated sub-directory
+      in the current directory every time the script is executed.
 
     --regex="<regex>" specifies a grep regular expression that will be used to select java
       process we want to take thread dumps of. Example:
@@ -58,7 +62,8 @@ Auxiliary commands:
 
     help - this help
 
-    pid - displays the PID that will be used by jstack
+    pid - displays the PID that will be used by jstack after applying the regular expression
+        on the process list. Useful to test the regular expression.
 
 EOF
 }
@@ -73,6 +78,22 @@ function java-pid() {
     [ "${java_pid// /}" != "${java_pid}" ] && { echo "[error]: regular expression '${regex}' selected more than one process: ${java_pid}" 1>&2; exit 1; }
     echo ${java_pid}
 
+}
+
+function create-directory-if-does-not-exist() {
+
+    local dir=$1
+
+    if [ "${dir}" = "" ]; then
+        dir="./"$(date +'%y.%m.%d-%H.%M.%S')"-thread-dumps"
+    fi
+
+    if [ ! -d ${dir} ]; then
+        echo "creating ${dir} ..." 1>&2
+        mkdir -p ${dir} || exit 1
+    fi
+
+    echo "${dir}"
 }
 
 function main() {
@@ -109,10 +130,11 @@ function main() {
 
     [ -x ${JAVA_HOME}/bin/jstack ] || { echo "[error]: ${JAVA_HOME}/bin/jstack does not exist or it is not an executable file" 1>&2; exit 1; }
 
-    if [ ! -d ${dir} ]; then
-        echo "creating ${dir} ..."
-        mkdir -p ${dir} || exit 1
-    fi
+    dir=$(create-directory-if-does-not-exist "${dir}") || exit 1
+
+    echo ${dir}
+
+    exit 0
 
     while [ true ]; do
 
