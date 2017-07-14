@@ -90,16 +90,40 @@ function debug() {
     ${VERBOSE} && echo "$@" 1>&2;
 }
 
-function java-pid() {
+#
+# If a valid PID is selected by the regex, it is sent to stdout and the function returns 0.
+# If no Java PID can be detected, or upon any other kind of external failure, return 1.
+# Exits on invalid argument.
+#
+function get-java-pid() {
 
     local regex="$1"
+    [ -z "${regex}" ] && { echo "get-java-pid(): regex not provided" 1>&2; exit 1; }
 
-    java_pid=$(ps -ef | grep "${regex}" | grep -v grep | grep -v $0 | awk '{print $2}') || exit 1
-    [ -z "${java_pid}" ] && { echo "[error]: regular expression '${regex}' did not select any process" 1>&2; exit 1; }
+    local failure=false
+
+    java_pid=$(ps -ef | grep "${regex}" | grep -v grep | grep -v $0 | awk '{print $2}') || failure=true
+
+    if [ -z "${java_pid}" ]; then
+
+        debug "regular expression '${regex}' did not select any process"
+        failure=true
+    fi
+
     java_pid="$(echo ${java_pid})"
-    [ "${java_pid// /}" != "${java_pid}" ] && { echo "[error]: regular expression '${regex}' selected more than one process: ${java_pid}" 1>&2; exit 1; }
-    echo ${java_pid}
 
+    if [ "${java_pid// /}" != "${java_pid}" ]; then
+
+        echo "[warn]: regular expression '${regex}' selected more than one process: ${java_pid}" 1>&2
+        failure=true
+    fi
+
+    if ${failure}; then
+        return 1
+    else
+        echo ${java_pid}
+        return 0
+    fi
 }
 
 function create-directory-if-does-not-exist() {
@@ -189,7 +213,7 @@ function main() {
         help
         return 0
     elif [ "${command}" = "pid" ]; then
-        java-pid "${regex}"
+        get-java-pid "${regex}"
         return 0
     fi
 
@@ -209,7 +233,7 @@ function main() {
 
         local pid
 
-        pid=$(java-pid "${regex}")
+        pid=$(get-java-pid "${regex}")
 
         debug "current pid: ${current_pid}, java pid: ${pid}"
 
