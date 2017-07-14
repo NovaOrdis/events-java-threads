@@ -31,10 +31,11 @@ function help() {
 
 cat <<EOF
 
-A script that invokes jstack periodically on the java process selected by a regular expression
-applied to the process list. The thread dumps are collected in the specified target directory.
-The script expects to find  JAVA_HOME set to the correct value,  and it will used JAVA_HOME to
-locate jstack in \$JAVA_HOME/bin.
+A script that invokes jstack and top periodically on the java process selected by a regular
+expression applied to the process list. Thread dump outputs and top outputs are collected in
+two different files, created the specified target directory. If the java process is restarted
+and the PID changes, new files will be created. The script expects to find  JAVA_HOME set to
+the correct value,  and it will used JAVA_HOME to locate jstack in \$JAVA_HOME/bin.
 
 Usage:
 
@@ -97,6 +98,31 @@ function create-directory-if-does-not-exist() {
     echo "${dir}"
 }
 
+function jstack-and-top-snapshot() {
+
+    local pid=$1
+    local output_filename_prefix=$2
+    local output_dir=$3
+
+    [ -z "${pid}" ] && { echo "jstack-and-top-snapshot(): pid not provided" 1>&2; exit 1; }
+    [ -z "${output_filename_prefix}" ] && { echo "jstack-and-top-snapshot(): output_filename_prefix not provided" 1>&2; exit 1; }
+    [ -z "${output_dir}" ] && { echo "jstack-and-top-snapshot(): output_dir not provided" 1>&2; exit 1; }
+    [ -d ${output_dir} ] || { echo "jstack-and-top-snapshot(): output_dir ${output_dir} not a valid directory" 1>&2; exit 1; }
+
+    local timestamp=$(date)
+
+    local thread_dump_file_name="${output_filename_prefix}.jstack"
+    local top_output_file_name="${output_filename_prefix}-top.out"
+
+    echo "${timestamp}" >> ${output_dir}/${thread_dump_file_name}
+    ${JAVA_HOME}/bin/jstack -l ${pid} 2>&1 >> ${output_dir}/${thread_dump_file_name} || \
+        { echo "[error]: failed to run ${JAVA_HOME}/bin/jstack -l ${pid}" 1>&2; exit 1; }
+
+    echo "${timestamp}" >> ${output_dir}/${top_output_file_name}
+    top -b -n 1 -H -p ${pid} >> ${output_dir}/${top_output_file_name} || \
+        { echo "[error]: failed to run top ... -p ${pid}" 1>&2; exit 1; }
+}
+
 function main() {
 
     local command
@@ -133,17 +159,39 @@ function main() {
 
     dir=$(create-directory-if-does-not-exist "${dir}") || exit 1
 
+    local current_pid
+    local output_filename_prefix
     first=true
 
     while [ true ]; do
 
-        local java_pid
-        java_pid=$(java-pid "${regex}") || exit 1
-        local file_name
-        file_name=$(date +'%y.%m.%d-%H.%M.%S')
-        file_name="${file_name}-${java_pid}.jstack"
-        ${JAVA_HOME}/bin/jstack -l ${java_pid} 2>&1 > ${dir}/${file_name} || \
-            { echo "[error]: failed to run ${JAVA_HOME}/bin/jstack -l ${java_pid}" 1>&2; exit 1; }
+        local pid
+
+        pid=$(java-pid "${regex}")
+
+        if [ -z "${pid}" ]; then
+
+            #
+            # we weren't able to get a java pid from the configured regular expression, that may mean the
+            # JVM is being bounced, so keep looping until explicitly stopped
+            #
+
+            current_pid=""
+            echo -n "?"
+            sleep ${interval}
+            continue;
+        fi
+
+        #
+        # we have what is seems to be a valid PID
+        #
+
+        if [ "${current_pid}" != "{pid}" ]; then
+            current_pid=${pid}
+            output_filename_prefix=$(date +'%y.%m.%d-%H.%M.%S')-${current_pid}
+        fi
+
+        $(jstack-and-top-snapshot "${current_pid}" "${output_filename_prefix}" "${dir}")
 
         if ${first}; then
             echo -n "collecting thread dumps in ${dir}, interval ${interval} seconds "
