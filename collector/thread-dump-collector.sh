@@ -3,7 +3,7 @@
 #
 # see help() below
 #
-VERSION=2
+VERSION=3
 
 #
 # configuration
