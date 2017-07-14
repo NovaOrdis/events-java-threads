@@ -3,7 +3,7 @@
 #
 # see help() below
 #
-version=1
+VERSION=2
 
 #
 # configuration
@@ -12,7 +12,7 @@ version=1
 #
 # the directory to write thread dumps into. If it does not exist, it will be created; the default
 # behavior if not specified is to create a dated sub-directory in the current directory every
-# time the script is executed.
+# time the script is executed. Overridden by the command line argument --dir=...
 #
 dir=
 
@@ -22,7 +22,8 @@ dir=
 interval=30
 
 #
-# regular expression used to select the java process we want to take thread dumps of
+# regular expression used to select the java process we want to take thread dumps of. Overridden by
+# command line argument --regex=...
 #
 regex="java.*D.Standalone"
 
