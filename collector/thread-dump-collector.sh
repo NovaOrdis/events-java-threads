@@ -42,6 +42,11 @@ will accumulate in the same files. The script expects to find  JAVA_HOME set to 
 value, and it will used JAVA_HOME to locate jstack in \$JAVA_HOME/bin. However, the script can
 be configured to use a custom Java home directory with --java-home=...
 
+WARNING: A failure to take a thread dump on the Java process does not interrupt the main loop.
+Failure details are logged in the thread dump file instead. For this reason, it is best if the
+thread dump file content is checked before launching this program in background and leaving it
+unattended.
+
 Usage:
 
     ./thread-dump-collector.sh [--dir=<target-directory>] [--regex=...] [--interval=<secs>]
