@@ -3,7 +3,7 @@
 #
 # see help() below
 #
-VERSION=3
+VERSION=4
 
 #
 # configuration
@@ -241,10 +241,10 @@ function main() {
 
             #
             # we weren't able to get a java pid from the configured regular expression, that may mean the
-            # JVM is being bounced, so keep looping until explicitly stopped
+            # JVM is being bounced, so keep looping until we are explicitly stopped; however, do not erase
+            # the current PID, we've seen situations when we were able to re-use it after a while
             #
 
-            current_pid=""
             echo -n "?"
             sleep ${interval}
             continue;
