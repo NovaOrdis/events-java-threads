@@ -3,7 +3,7 @@
 #
 # see help() below
 #
-VERSION=5
+VERSION=6
 
 #
 # configuration
@@ -26,6 +26,21 @@ interval=30
 # command line argument --regex=...
 #
 regex="java.*D.Standalone"
+
+#
+# java_home to use. If set here, will override the JAVA_HOME environment variable, if present, but
+# it will be overridden by --java-home= command line argument, if present.
+#
+java_home=
+
+#
+# A "fail-fast" protection for the case collection has to be done with a specific Unix user. If
+# this variable is configured, and the Unix user executing the script does not match the value,
+# the collector will fail quickly with an explanatory message, instead of waiting until jstack
+# cannot access the remote java process and fails with a more obscure message
+#
+
+user=jboss
 
 VERBOSE=false
 
@@ -267,7 +282,25 @@ function loop() {
         echo "$(date): successful jstack reading"
         sleep ${interval}
     done
+}
 
+function check-user() {
+
+    local user=$1
+
+    if [ -z "${user}" ]; then
+
+        debug "check-user(): we are not checking the user"
+        return 0
+    fi
+
+    local current_user
+    current_user=$(whoami) || exit 1
+
+    if [ "${user}" != "${current_user}" ]; then
+        echo "[error]: the collector must execute as '${user}' but it is executing as '${current_user}'" 1>&2
+        return 1
+    fi
 }
 
 function main() {
@@ -277,7 +310,6 @@ function main() {
     #
 
     local command
-    local java_home
 
     while [ -n "$1" ]; do
 
@@ -346,6 +378,11 @@ function main() {
         echo "$(basename $0) is already running in background with pid ${background_collector_pid}" 1>&2;
         exit 1;
     fi
+
+    #
+    # verify we are running with the correct user
+    #
+    check-user ${user} || exit 1
 
     dir=$(create-directory-if-does-not-exist "${dir}") || exit 1
 
