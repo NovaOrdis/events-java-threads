@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.novaordis.tda</groupId>
         <artifactId>tda-root</artifactId>
-        <version>1.0.2-SNAPSHOT-6</version>
+        <version>1.0.2-SNAPSHOT-7</version>
     </parent>
 
     <artifactId>tda-release</artifactId>
@@ -23,7 +23,7 @@
                           finalName impacts only the locally built artifact, not the name of the artifact that gets
                           deployed in the repository.
                     -->
-                    <finalName>artifactId-${project.version}</finalName>
+                    <finalName>tda-${project.version}</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                     <descriptors>
                         <descriptor>src/assembly/release.xml</descriptor>
