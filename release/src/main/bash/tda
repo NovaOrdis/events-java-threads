@@ -58,11 +58,12 @@ function main() {
 
     debug "command: ${command}"
 
-    #
-    # "Light" version retrieval
-    #
 
     if [ "${command}" = "version" ]; then
+
+        #
+        # "version" handling - "light" version retrieval
+        #
 
         debug "handling version"
 
@@ -77,10 +78,21 @@ function main() {
         fi
 
         #
-        # pass the command to the java runtime
+        # we weren't able to handle it satisfactory at the bash level, pass it to the java runtime at the front of
+        # the argument list
         #
         args="${command} ${args}"
+
+    else
+
+        #
+        # the command is not handled in bash, add it to the front of the argument list
+        #
+
+        args="${command} ${args}"
     fi
+
+
 
     local java_bin
     java_bin=$(get-java-binary) || exit 1
