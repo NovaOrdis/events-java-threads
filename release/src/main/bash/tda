@@ -18,6 +18,8 @@ function main() {
 
     while [ -n "$1" ]; do
 
+        debug "arg: $1"
+
         if [ "$1" = "-d" -o "$1" = "--debug" ]; then
 
             java_debug_args="${JAVA_DEBUG_ARGS}"
@@ -26,19 +28,35 @@ function main() {
 
             VERBOSE=true
 
-        elif [ ${1:0:1} = "-" ]; then
+        elif [ "${1:0:1}" = "-" ]; then
 
             error "unknown command line option '$1'"
+
+        elif [ "$1" != "${1/ //}" ]; then
+
+            #
+            # the argument contains spaces, which means double quote were used. We need to pass those down, so the
+            # java command line parsing logic can detect the quoted strings. More then that, if the double quoted
+            # string contains escaped quotes, we want to pass them as such
+            #
+            # TODO: if more than one space is enclosed in quotes, the block of spaces is not passed, it is converted
+            #       to just one space, which is a defect. Fix.
+            #
+            escaped_inner_quotes=${1//\"/\\\"}
+            args="${args} \"${escaped_inner_quotes}\""
 
         elif [ -z "${command}" ]; then
 
             command=$1
+
         else
 
             args="${args} $1"
         fi
         shift
     done
+
+    debug "command: ${command}"
 
     #
     # "Light" version retrieval
@@ -74,7 +92,9 @@ function main() {
 
     debug "classpath: ${classpath}"
 
+    debug "arguments:>${args}<"
+
     ${java_bin} ${java_debug_args} -cp ${classpath} ${MAIN_CLASS} ${args}
 }
 
-main $@
+main "$@"
