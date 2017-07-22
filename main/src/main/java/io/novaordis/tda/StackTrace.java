@@ -93,8 +93,8 @@ public class StackTrace {
     }
 
     /**
-     * @return the thread ID in a hexadecimal representation, similar to the one recorded in the stack trace. May return
-     * null, which means the thread ID could not be extracted from the stack trace.
+     * @return the thread ID in a hexadecimal representation, similar to the one recorded in the stack trace. May
+     * return null, which means the thread ID could not be extracted from the stack trace.
      */
     public String getTidAsHexString() {
 
@@ -125,6 +125,7 @@ public class StackTrace {
     }
 
     public boolean isEmpty() {
+
         return original.length() == 0;
     }
 
