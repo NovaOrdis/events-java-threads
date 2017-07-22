@@ -8,11 +8,11 @@ import java.io.StringReader;
  *
  * Copyright 2010 Ovidiu Feodorov
  */
-public class ThreadDefinition
-{
-    // Constants -----------------------------------------------------------------------------------
+public class StackTrace {
 
-    // Static --------------------------------------------------------------------------------------
+    // Constants -------------------------------------------------------------------------------------------------------
+
+    // Static ----------------------------------------------------------------------------------------------------------
 
     // Attributes ------------------------------------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ public class ThreadDefinition
 
     // Constructors ----------------------------------------------------------------------------------------------------
 
-    public ThreadDefinition() {
+    public StackTrace() {
 
         original = new StringBuffer();
         oneLine = "";
@@ -34,7 +34,7 @@ public class ThreadDefinition
      *
      * @param content the multi-line content
      */
-    public ThreadDefinition(long lineNumber, String content) throws Exception {
+    public StackTrace(long lineNumber, String content) throws Exception {
 
         this();
 
@@ -80,7 +80,7 @@ public class ThreadDefinition
      */
     public boolean matches(String regex) {
 
-        return regex == null || oneLine.indexOf(regex) != -1;
+        return regex == null || oneLine.contains(regex);
     }
 
     public String getOriginal()
@@ -93,14 +93,15 @@ public class ThreadDefinition
         return name == null ? "INVALID THREAD DEFINITION" : name;
     }
 
-    // Package protected ---------------------------------------------------------------------------
+    // Package protected -----------------------------------------------------------------------------------------------
 
     /**
      * Appends a line.
      */
     void append(String line, long lineNumber) throws Exception {
-        if (firstLine == null)
-        {
+
+        if (firstLine == null) {
+
             firstLine = line;
 
             // attempt preemptively extracting the header name. Extracting a valid header name
@@ -113,34 +114,34 @@ public class ThreadDefinition
         oneLine += line + " ";
     }
 
-    boolean isValid()
-    {
+    boolean isValid() {
+
         return name != null;
     }
 
-    void clear()
-    {
+    void clear() {
+
         original.setLength(0);
         firstLine = null;
         oneLine = null;
     }
 
-    // Protected -----------------------------------------------------------------------------------
+    // Protected -------------------------------------------------------------------------------------------------------
 
-    // Private -------------------------------------------------------------------------------------
+    // Private ---------------------------------------------------------------------------------------------------------
 
     /**
      * @return null if cannot extract the thread name.
      */
-    private String extractThreadName(String line)
-    {
-        if (line == null)
-        {
+    private String extractThreadName(String line) {
+
+        if (line == null) {
+
             return null;
         }
 
-        if (!line.startsWith("\""))
-        {
+        if (!line.startsWith("\"")) {
+
             return null;
         }
 
@@ -148,8 +149,8 @@ public class ThreadDefinition
 
         int i = line.indexOf("\"");
 
-        if (i == -1)
-        {
+        if (i == -1) {
+
             // quotes don't close
             return null;
         }
@@ -157,5 +158,5 @@ public class ThreadDefinition
         return line.substring(0, i);
     }
 
-    // Inner classes -------------------------------------------------------------------------------
+    // Inner classes ---------------------------------------------------------------------------------------------------
 }

@@ -15,7 +15,7 @@ import static org.junit.Assert.assertTrue;
  *
  * Copyright 2010 Ovidiu Feodorov
  */
-public class ThreadDefinitionTest {
+public class StackTraceTest {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
@@ -59,7 +59,7 @@ public class ThreadDefinitionTest {
                         "   Locked ownable synchronizers:\n" +
                         "\t- None\n";
 
-        ThreadDefinition d = new ThreadDefinition(1, s);
+        StackTrace d = new StackTrace(1, s);
 
         assertEquals("http-0.0.0.0:8443-266", d.getName());
         assertEquals(s, d.getOriginal());
@@ -97,7 +97,7 @@ public class ThreadDefinitionTest {
                         "   Locked ownable synchronizers:\n" +
                         "\t- None\n";
 
-        ThreadDefinition d = new ThreadDefinition(1, s);
+        StackTrace d = new StackTrace(1, s);
 
         assertEquals("http-0.0.0.0:8443-266", d.getName());
     }
@@ -112,7 +112,7 @@ public class ThreadDefinitionTest {
             "   java.lang.Thread.State: BLOCKED (on object monitor)\n" +
             "\tat java.lang.Throwable.printStackTrace(Throwable.java:460)";
 
-        ThreadDefinition td = new ThreadDefinition();
+        StackTrace td = new StackTrace();
 
         String line;
         BufferedReader br = new BufferedReader(new StringReader(s));
@@ -133,7 +133,7 @@ public class ThreadDefinitionTest {
             "   java.lang.Thread.State: BLOCKED (on object monitor)\n" +
             "\tat java.lang.Throwable.printStackTrace(Throwable.java:460)";
 
-        ThreadDefinition td = new ThreadDefinition();
+        StackTrace td = new StackTrace();
 
         String line;
         BufferedReader br = new BufferedReader(new StringReader(s));
@@ -152,7 +152,7 @@ public class ThreadDefinitionTest {
     @Test
     public void testMatch() throws Exception {
 
-        ThreadDefinition td = new ThreadDefinition();
+        StackTrace td = new StackTrace();
 
         td.append("\"ajp-10.7.25.129-8009-587\" daemon prio=3 tid=0x000000010be0c000 nid=0x34d runnable [0xfffffffe1b07e000]", -1);
         td.append("   java.lang.Thread.State: RUNNABLE", -1);

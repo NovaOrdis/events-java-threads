@@ -47,7 +47,7 @@ public class ThreadDumpTest {
 
     /**
      * For a systematic approach to testing valid thread definitions, see VALID DEFINITIONS TESTS
-     * section of ThreadDefinitionTest.
+     * section of StackTraceTest.
      */
     @Test
     public void testAppend_Invalid() throws Exception
@@ -78,7 +78,7 @@ public class ThreadDumpTest {
 
     /**
      * For a systematic approach to testing valid thread definitions, see VALID DEFINITIONS TESTS
-     * section of ThreadDefinitionTest.
+     * section of StackTraceTest.
      */
     @Test
     public void testAppend() throws Exception
@@ -115,7 +115,7 @@ public class ThreadDumpTest {
 
     /**
      * For a systematic approach to testing valid thread definitions, see VALID DEFINITIONS TESTS
-     * section of ThreadDefinitionTest.
+     * section of StackTraceTest.
      */
     @Test
     public void testAppend_NoFirstEmptyLine() throws Exception

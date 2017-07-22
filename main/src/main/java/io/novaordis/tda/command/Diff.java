@@ -18,7 +18,7 @@ package io.novaordis.tda.command;
 
 import io.novaordis.tda.Command;
 import io.novaordis.tda.SimplifiedLogger;
-import io.novaordis.tda.ThreadDefinition;
+import io.novaordis.tda.StackTrace;
 import io.novaordis.tda.ThreadDump;
 import io.novaordis.tda.ThreadDumpFile;
 import io.novaordis.tda.UserErrorException;
@@ -138,16 +138,16 @@ public class Diff implements Command {
         ThreadDump d = tdFile.iterator().next();
         ThreadDump d2 = tdFile2.iterator().next();
 
-        for(Iterator<ThreadDefinition> i = d.iterator(); i.hasNext(); ) {
+        for(Iterator<StackTrace> i = d.iterator(); i.hasNext(); ) {
 
-            ThreadDefinition td = i.next();
+            StackTrace td = i.next();
             String name = td.getName();
             threadNames.add(name);
         }
 
-        for(Iterator<ThreadDefinition> i = d2.iterator(); i.hasNext(); ) {
+        for(Iterator<StackTrace> i = d2.iterator(); i.hasNext(); ) {
 
-            ThreadDefinition td = i.next();
+            StackTrace td = i.next();
             String name = td.getName();
             threadNames2.add(name);
         }

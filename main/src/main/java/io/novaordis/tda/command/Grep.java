@@ -3,7 +3,7 @@ package io.novaordis.tda.command;
 
 import io.novaordis.tda.Command;
 import io.novaordis.tda.SimplifiedLogger;
-import io.novaordis.tda.ThreadDefinition;
+import io.novaordis.tda.StackTrace;
 import io.novaordis.tda.ThreadDump;
 import io.novaordis.tda.ThreadDumpFile;
 import io.novaordis.tda.UserErrorException;
@@ -91,9 +91,9 @@ public class Grep implements Command
         {
             ThreadDump td = i.next();
 
-            for(Iterator<ThreadDefinition> j = td.iterator(); j.hasNext(); )
+            for(Iterator<StackTrace> j = td.iterator(); j.hasNext(); )
             {
-                ThreadDefinition d = j.next();
+                StackTrace d = j.next();
 
                 if (d.matches(regex))
                 {
