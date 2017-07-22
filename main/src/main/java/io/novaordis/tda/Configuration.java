@@ -51,11 +51,14 @@ class Configuration {
         }
         else if (Help.LITERAL.equals(command)) {
 
-
+            c = new Help(log);
         }
         else {
 
+            //
             // anything else is a Grep command and the following argument is interpreted as a regular expression
+            //
+            
             c = new Grep(log, args);
         }
     }

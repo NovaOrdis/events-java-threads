@@ -14,7 +14,7 @@ import java.io.InputStreamReader;
  * Copyright 2010 Ovidiu Feodorov
  */
 public class Help implements Command {
-    
+
     // Constants -------------------------------------------------------------------------------------------------------
 
     public static final String LITERAL = "help";
