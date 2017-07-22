@@ -49,6 +49,10 @@ class Configuration {
             System.arraycopy(args, 1, args2, 0, args2.length);
             c = new Diff(log, args2);
         }
+        else if (Help.LITERAL.equals(command)) {
+
+
+        }
         else {
 
             // anything else is a Grep command and the following argument is interpreted as a regular expression
