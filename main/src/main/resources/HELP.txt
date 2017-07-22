@@ -4,19 +4,18 @@ Usage:
 
     tda [options] <regex|command> <thread-dump-file> [thread-dump-file, ...]
 
-The utility works by default in a manner similar to grep, processing the thread dump file
-sequentially, one thread dump at a time. It filters the thread stacks based on given regular
-expression and displays the output, subject to options. More than one thread dump in a single
-file are supported.
 
-The utility supports alternate commands ("diff", etc.).
+tda is a command-line utility that can be used to process Java thread dumps.
+
+tda works by default in a manner similar to grep, processing the thread dump file sequentially,
+one thread dump at a time.  Multiple thread dumps (i.e. the result of multiple invocations, at
+different moments in time), may be present in the file, and tda distinguishes this situation,
+by handling each thread dump individually. Once the stack trances are parsed, tda matches their
+content against the given regular expression and displays the stack traces that match.
+
+The utility supports alternate commands ("diff", "split", etc.).
 
 User manual:
 
     https://kb.novaordis.com/index.php/Tda_User_Manual
-
-
-
-
-
 
