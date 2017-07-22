@@ -2,6 +2,7 @@ package io.novaordis.tda;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.util.Arrays;
 
 /**
  * @author <a href="mailto:ovidiu@novaordis.com">Ovidiu Feodorov</a>
@@ -19,7 +20,19 @@ public class StackTrace {
     private StringBuffer original;
     private String oneLine;
     private String firstLine;
+
     private String name;
+
+    //
+    // if null, it means the tid could not be extracted from the stack trace
+    //
+    private Long tid;
+    private boolean tidHexRepresentationStartsWith0x;
+
+    //
+    // the hex string representation (without leading 0x, if present) length
+    //
+    private int tidHexRepresentationLength;
 
     // Constructors ----------------------------------------------------------------------------------------------------
 
@@ -64,12 +77,52 @@ public class StackTrace {
     // Public ----------------------------------------------------------------------------------------------------------
 
     /**
-     * Will return null if thread definition is invalid.
+     * @return the name of the thread represented by this stack trace. Will return null if thread definition is invalid.
      */
     public String getName() {
+
         return name;
     }
 
+    /**
+     * @return the thread ID. May return null, which means the thread ID could not be extracted from the stack trace.
+     */
+    public Long getTid() {
+
+        return tid;
+    }
+
+    /**
+     * @return the thread ID in a hexadecimal representation, similar to the one recorded in the stack trace. May return
+     * null, which means the thread ID could not be extracted from the stack trace.
+     */
+    public String getTidAsHexString() {
+
+        if (tid == null) {
+
+            return null;
+        }
+
+        String s = Long.toHexString(tid);
+
+        if (s.length() != tidHexRepresentationLength) {
+
+            //
+            // pad with leading zeroes
+            //
+
+            char[] padding = new char[tidHexRepresentationLength - s.length()];
+            Arrays.fill(padding, '0');
+            s = new String(padding) + s;
+        }
+
+        if (tidHexRepresentationStartsWith0x) {
+
+            s = "0x" + s;
+        }
+
+        return s;
+    }
 
     public boolean isEmpty() {
         return original.length() == 0;
@@ -104,10 +157,11 @@ public class StackTrace {
 
             firstLine = line;
 
-            // attempt preemptively extracting the header name. Extracting a valid header name
-            // is a pre-requisite to a valid thread definition
-            name = extractThreadName(line);
-
+            //
+            // attempt to extract preemptively the header name, tid, etc. A valid header name is a pre-requisite to a
+            // valid thread definition
+            //
+            parseFirstLine(line);
         }
 
         original.append(line).append("\n");
@@ -130,19 +184,16 @@ public class StackTrace {
 
     // Private ---------------------------------------------------------------------------------------------------------
 
-    /**
-     * @return null if cannot extract the thread name.
-     */
-    private String extractThreadName(String line) {
+    private void parseFirstLine(String line) {
 
         if (line == null) {
 
-            return null;
+            return;
         }
 
         if (!line.startsWith("\"")) {
 
-            return null;
+            return;
         }
 
         line = line.substring(1);
@@ -152,10 +203,32 @@ public class StackTrace {
         if (i == -1) {
 
             // quotes don't close
-            return null;
+            return;
         }
 
-        return line.substring(0, i);
+        this.name = line.substring(0, i);
+
+        i = line.indexOf("tid=");
+
+        if (i != -1) {
+
+            int j = line.indexOf(' ', i);
+
+            if (j == -1) {
+
+                j = line.length();
+            }
+
+            String hex = line.substring(i + "tid=".length(), j);
+
+            if (hex.startsWith("0x")) {
+
+                tidHexRepresentationStartsWith0x = true;
+                hex = hex.substring("0x".length());
+            }
+            tidHexRepresentationLength = hex.length();
+            tid = Long.parseUnsignedLong(hex, 16);
+        }
     }
 
     // Inner classes ---------------------------------------------------------------------------------------------------

@@ -36,7 +36,7 @@ public class ThreadDump
     private Date timestamp;
     private String header;
     private long headerLineNumber;
-    private List<StackTrace> tds;
+    private List<StackTrace> stackTraces;
 
     private StackTrace current;
 
@@ -54,7 +54,7 @@ public class ThreadDump
         this.timestamp = timestamp;
         this.header = header;
         this.headerLineNumber = headerLineNumber;
-        this.tds = new ArrayList<StackTrace>();
+        this.stackTraces = new ArrayList<>();
         this.current = new StackTrace();
         this.closed = false;
     }
@@ -81,12 +81,12 @@ public class ThreadDump
 
     public int getThreadCount()
     {
-        return tds.size();
+        return stackTraces.size();
     }
 
     public Iterator<StackTrace> iterator()
     {
-        return tds.iterator();
+        return stackTraces.iterator();
     }
 
     public File getFile()
@@ -146,31 +146,35 @@ public class ThreadDump
 
     // Protected -----------------------------------------------------------------------------------
 
-    void append(String line, long lineNumber) throws Exception
-    {
-        if (closed)
-        {
+    void append(String line, long lineNumber) throws Exception {
+
+        if (closed) {
+
             throw new Exception(this + " is closed, no more lines can be appended to it");
         }
 
-        if (line.trim().length() == 0)
-        {
+        if (line.trim().length() == 0) {
+
             // empty line - cue to start a new StackTrace
 
-            if (current.isValid())
-            {
-                // save the latest one
-                tds.add(current);
+            if (current.isValid()) {
+
+                //
+                // add the last StackTrace to the collection
+                //
+                stackTraces.add(current);
                 current = new StackTrace();
             }
-            else
-            {
+            else {
+
+                //
                 // clean the garbage accumulated so far
+                //
                 current.clear();
             }
         }
-        else
-        {
+        else {
+
             current.append(line, lineNumber);
         }
     }
@@ -178,20 +182,20 @@ public class ThreadDump
     /**
      * "closes" this thread dump - it is the notification that no more lines will be appended.
      */
-    void close()
-    {
-        if (current.isValid())
-        {
+    void close() {
+
+        if (current.isValid()) {
+
             // save the latest one
-            tds.add(current);
+            stackTraces.add(current);
         }
 
         current = null;
         closed = true;
     }
 
-    // Private -------------------------------------------------------------------------------------
+    // Private ---------------------------------------------------------------------------------------------------------
 
-    // Inner classes -------------------------------------------------------------------------------
+    // Inner classes ---------------------------------------------------------------------------------------------------
 
 }

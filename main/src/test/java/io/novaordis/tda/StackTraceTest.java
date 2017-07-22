@@ -59,12 +59,13 @@ public class StackTraceTest {
                         "   Locked ownable synchronizers:\n" +
                         "\t- None\n";
 
-        StackTrace d = new StackTrace(1, s);
+        StackTrace t = new StackTrace(1, s);
 
-        assertEquals("http-0.0.0.0:8443-266", d.getName());
-        assertEquals(s, d.getOriginal());
-        assertFalse(d.isEmpty());
-        assertTrue(d.isValid());
+        assertEquals("http-0.0.0.0:8443-266", t.getName());
+        assertEquals("0x00007f7dc853b800", t.getTidAsHexString());
+        assertEquals(s, t.getOriginal());
+        assertFalse(t.isEmpty());
+        assertTrue(t.isValid());
     }
 
     // getName() -------------------------------------------------------------------------------------------------------
@@ -97,9 +98,11 @@ public class StackTraceTest {
                         "   Locked ownable synchronizers:\n" +
                         "\t- None\n";
 
-        StackTrace d = new StackTrace(1, s);
+        StackTrace t = new StackTrace(1, s);
 
-        assertEquals("http-0.0.0.0:8443-266", d.getName());
+        assertEquals("http-0.0.0.0:8443-266", t.getName());
+        assertEquals("0x00007f7dc853b800", t.getTidAsHexString());
+
     }
 
     // VALID DEFINITIONS TESTS -----------------------------------------------------------------------------------------
@@ -147,7 +150,7 @@ public class StackTraceTest {
     }
 
 
-    // MATCH TESTS -----------------------------------------------------------------------------------------------------
+    // match() ---------------------------------------------------------------------------------------------------------
 
     @Test
     public void testMatch() throws Exception {

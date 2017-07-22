@@ -140,8 +140,8 @@ public class Diff implements Command {
 
         for(Iterator<StackTrace> i = d.iterator(); i.hasNext(); ) {
 
-            StackTrace td = i.next();
-            String name = td.getName();
+            StackTrace st = i.next();
+            String name = st.getName();
             threadNames.add(name);
         }
 
