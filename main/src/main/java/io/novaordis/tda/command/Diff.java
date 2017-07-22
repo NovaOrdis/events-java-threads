@@ -170,7 +170,8 @@ public class Diff implements Command {
 
             for(Long tid: onlyInFirst) {
 
-                log.info("  " + tid);
+                String name = td.getName(tid);
+                log.info("  " + tid + ": " + name);
             }
 
             log.info("");
@@ -180,14 +181,14 @@ public class Diff implements Command {
 
             log.info("only in " + file2 + ":");
 
-            for(Long s: onlyInSecond) {
+            for(Long tid : onlyInSecond) {
 
-                log.info("  " + s);
+                String name = td2.getName(tid);
+                log.info("  " + tid + ": " + name);
             }
 
             log.info("");
         }
-
     }
 
     // Public ----------------------------------------------------------------------------------------------------------
