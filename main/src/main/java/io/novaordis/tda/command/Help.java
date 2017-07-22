@@ -32,32 +32,33 @@ public class Help implements Command
 
     // Command implementation ----------------------------------------------------------------------
 
-    public void run() throws Exception
-    {
+    public void run() throws Exception {
+
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("HELP.txt");
 
-        if (is == null)
-        {
+        if (is == null) {
+
             log.error("HELP.txt not found in the root of the jar file, no help available");
+            return;
         }
 
         BufferedReader br = null;
 
-        try
-        {
+        try {
+
             br = new BufferedReader(new InputStreamReader(is));
 
             String line;
 
-            while((line = br.readLine()) != null)
-            {
+            while((line = br.readLine()) != null) {
+
                 log.info(line);
             }
         }
-        finally
-        {
-            if (br != null)
-            {
+        finally {
+
+            if (br != null) {
+
                 br.close();
             }
         }

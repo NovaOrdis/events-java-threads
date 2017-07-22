@@ -1,61 +1,22 @@
+Thread Dump Analyzer.
 
 Usage:
 
     tda [options] <regex|command> <thread-dump-file> [thread-dump-file, ...]
 
-    java -jar tdanalyzer.jar [options] <regex|command> <thread-dump-file> [thread-dump-file, ...]
+The utility works by default in a manner similar to grep, processing the thread dump file
+sequentially, one thread dump at a time. It filters the thread stacks based on given regular
+expression and displays the output, subject to options. More than one thread dump in a single
+file are supported.
 
-The utility processes the thread dump file sequentially, one thread dump at a time, filtering the
-thread stacks based on the given regexp and combination of options. More than one thread dump in a
-single file are supported. The filtered thread dump or the scalar result are displayed at stdout.
+The utility supports alternate commands ("diff", etc.).
 
-The default command, and simplest possible usage is to filter and display at standard output only
-the stack traces that match the given regular expression. For example:
+User manual:
 
-    tda http- thread-dump-file.txt
-
-will display at stdout only the stack traces that contain "http-".
-
-
-Options:
-
-    -v <regex> <thread-dump-file> - sequentially reads the thread dump file and outputs
-            at stdout all thread dumps that DO NOT contain the regular expression.
-
-    -c (count) counts the number of threads that match the regular expression, but does not
-            display them. It displays the count at stdout instead. If only the file name is
-            specified, the regular expression is assumed to be "match all", as in the following
-            example:
-
-                tda -c thread-dump-file.txt
-
-    -s (split) extracts individual thread dumps from the log file and places them into separate
-            files. The name of the files is built based on the counter and timestamp (if
-            available).
-
-
-    --<ExtensionClassName> (example --FSI, --FFM) where the class should be available in
-            com/novaordis/universus/tdanalyzer/extensions
+    https://kb.novaordis.com/index.php/Tda_User_Manual
 
 
 
-Regular Expression Syntax:
-
-tda is designed to use the same regular expressions as grep.
-
-    Spaces - enclosing the regular expression in double quotes preserves spaces. Example
-
-            tda "on object monitor" thread-dump-file.txt
-
-
-
-Other commands:
-
-    diff <thread-dump-file-1> <thread-dump-file-2> shows the difference between the thread dumps.
-
-    help
-
-    version
 
 
 
