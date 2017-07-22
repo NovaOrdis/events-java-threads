@@ -2,3 +2,5 @@ target
 IntelliJ/*.iws
 workspace.xml
 .DS_Store
+~$*.docx
+.~lock.*.odg#

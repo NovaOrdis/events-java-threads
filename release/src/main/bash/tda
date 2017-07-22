@@ -1,0 +1,80 @@
+#!/bin/bash
+
+[ -f $(dirname $0)/bash-wrapper-functions ] && . $(dirname $0)/bash-wrapper-functions || { echo "[error]: $(dirname $0)/bash-wrapper-functions not found, the application was probably not installed correctly" 1>&2; exit 1; }
+
+MAIN_CLASS=io.novaordis.tda.Main
+JAVA_DEBUG_ARGS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"
+VERBOSE=false
+
+function main() {
+
+    #
+    # loop over command line arguments and handle common arguments
+    #
+
+    local args
+    local command
+    local java_debug_args
+
+    while [ -n "$1" ]; do
+
+        if [ "$1" = "-d" -o "$1" = "--debug" ]; then
+
+            java_debug_args="${JAVA_DEBUG_ARGS}"
+
+        elif [ "$1" = "-v" -o "$1" = "--verbose" ]; then
+
+            VERBOSE=true
+
+        elif [ ${1:0:1} = "-" ]; then
+
+            error "unknown command line option '$1'"
+
+        elif [ -z "${command}" ]; then
+
+            command=$1
+        else
+
+            args="${args} $1"
+        fi
+        shift
+    done
+
+    #
+    # "Light" version retrieval
+    #
+
+    if [ "${command}" = "version" ]; then
+
+        debug "handling version"
+
+        local version=$(get-version)
+        if [ -n "${version}" ]; then
+
+            #
+            # display and exit
+            #
+            echo "${version}"
+            return 0
+        fi
+
+        #
+        # pass the command to the java runtime
+        #
+        args="${command} ${args}"
+    fi
+
+    local java_bin
+    java_bin=$(get-java-binary) || exit 1
+
+    debug "java_bin: ${java_bin}"
+
+    local classpath
+    classpath=$(get-classpath-from-directory $(dirname $0)/../lib true)
+
+    debug "classpath: ${classpath}"
+
+    ${java_bin} ${java_debug_args} -cp ${classpath} ${MAIN_CLASS} ${args}
+}
+
+main $@

@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/novaordis-tda.iml" filepath="$PROJECT_DIR$/novaordis-tda.iml" />
+      <module fileurl="file://$PROJECT_DIR$/main/tda.iml" filepath="$PROJECT_DIR$/main/tda.iml" />
+      <module fileurl="file://$PROJECT_DIR$/release/tda-release.iml" filepath="$PROJECT_DIR$/release/tda-release.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tda-root.iml" filepath="$PROJECT_DIR$/tda-root.iml" />
     </modules>
   </component>
 </project>
