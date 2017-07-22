@@ -213,19 +213,18 @@ public class DiffTest {
     @Test
     public void onlyInFirst() throws Exception {
 
-        List<String> first = new ArrayList<>(Arrays.asList("A", "L", "X"));
-        List<String> second = new ArrayList<>(Arrays.asList("B", "L", "Z"));
+        List<Long> first = new ArrayList<>(Arrays.asList(1L, 10L, 100L));
+        List<Long> second = new ArrayList<>(Arrays.asList(2L, 10L, 200L));
 
-        List<String> onlyInFirst = Diff.onlyInFirst(first, second);
+        List<Long> onlyInFirst = Diff.onlyInFirst(first, second);
         assertEquals(2, onlyInFirst.size());
-        assertEquals("A", onlyInFirst.get(0));
-        assertEquals("X", onlyInFirst.get(1));
+        assertEquals(1L, onlyInFirst.get(0).longValue());
+        assertEquals(100L, onlyInFirst.get(1).longValue());
 
-        List<String> onlyInSecond = Diff.onlyInFirst(second, first);
+        List<Long> onlyInSecond = Diff.onlyInFirst(second, first);
         assertEquals(2, onlyInFirst.size());
-        assertEquals("B", onlyInSecond.get(0));
-        assertEquals("Z", onlyInSecond.get(1));
-
+        assertEquals(2L, onlyInSecond.get(0).longValue());
+        assertEquals(200L, onlyInSecond.get(1).longValue());
     }
 
     // Package protected -----------------------------------------------------------------------------------------------

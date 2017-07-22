@@ -42,13 +42,13 @@ public class Diff implements Command {
      * @return a list of strings only found in the first list, in the order in which they occur. May return an empty
      * list, never null.
      */
-    public static List<String> onlyInFirst(List<String> list, List<String> list2) {
+    public static List<Long> onlyInFirst(List<Long> firstThreadDumpTids, List<Long> secondThreadDumpTids) {
 
-        List<String> result = null;
+        List<Long> result = null;
 
-        for(String s: list) {
+        for(Long s: firstThreadDumpTids) {
 
-            if (!list2.contains(s)) {
+            if (!secondThreadDumpTids.contains(s)) {
 
                 if (result == null) {
 
@@ -129,39 +129,48 @@ public class Diff implements Command {
 
     public void run() throws Exception {
 
-        List<String> threadNames = new ArrayList<>(), threadNames2 = new ArrayList<>();
+        List<Long> tids = new ArrayList<>();
+        List<Long> tids2 = new ArrayList<>();
 
         //
         // the constructor did take care already that we only have a thread dump per file
         //
 
-        ThreadDump d = tdFile.iterator().next();
-        ThreadDump d2 = tdFile2.iterator().next();
+        ThreadDump td = tdFile.iterator().next();
+        ThreadDump td2 = tdFile2.iterator().next();
 
-        for(Iterator<StackTrace> i = d.iterator(); i.hasNext(); ) {
+        for(Iterator<StackTrace> i = td.iterator(); i.hasNext(); ) {
 
             StackTrace st = i.next();
-            String name = st.getName();
-            threadNames.add(name);
+            Long tid = st.getTid();
+            if (tid == null) {
+
+                throw new UserErrorException("could not extract tid");
+            }
+            tids.add(tid);
         }
 
-        for(Iterator<StackTrace> i = d2.iterator(); i.hasNext(); ) {
+        for(Iterator<StackTrace> i = td2.iterator(); i.hasNext(); ) {
 
-            StackTrace td = i.next();
-            String name = td.getName();
-            threadNames2.add(name);
+            StackTrace st = i.next();
+            Long tid = st.getTid();
+            if (tid == null) {
+
+                throw new UserErrorException("could not extract tid");
+            }
+            tids2.add(tid);
         }
 
-        List<String> onlyInFirst = onlyInFirst(threadNames, threadNames2);
-        List<String> onlyInSecond = onlyInFirst(threadNames2, threadNames);
+        List<Long> onlyInFirst = onlyInFirst(tids, tids2);
+        List<Long> onlyInSecond = onlyInFirst(tids2, tids);
 
         if (!onlyInFirst.isEmpty()) {
 
             log.info("only in " + file + ":");
 
-            for(String s: onlyInFirst) {
+            for(Long tid: onlyInFirst) {
 
-                log.info("  " + s);
+                log.info("  " + tid);
             }
 
             log.info("");
@@ -171,7 +180,7 @@ public class Diff implements Command {
 
             log.info("only in " + file2 + ":");
 
-            for(String s: onlyInSecond) {
+            for(Long s: onlyInSecond) {
 
                 log.info("  " + s);
             }
