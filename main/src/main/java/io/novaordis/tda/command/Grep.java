@@ -21,13 +21,13 @@ import java.util.Iterator;
  */
 public class Grep implements Command
 {
-    // Constants -----------------------------------------------------------------------------------
+    // Constants -------------------------------------------------------------------------------------------------------
 
     public static final Format TIMESTAMP_PREFIX = new SimpleDateFormat("yyyy.MM.dd-HH.mm.ss");
 
-    // Static --------------------------------------------------------------------------------------
+    // Static ----------------------------------------------------------------------------------------------------------
 
-    // Attributes ----------------------------------------------------------------------------------
+    // Attributes ------------------------------------------------------------------------------------------------------
 
     private SimplifiedLogger log;
 
@@ -39,46 +39,63 @@ public class Grep implements Command
     private boolean count;
     private boolean split;
 
-    // Constructors --------------------------------------------------------------------------------
+    // Constructors ----------------------------------------------------------------------------------------------------
 
-    public Grep(SimplifiedLogger log, String[] args) throws Exception
-    {
+    public Grep(SimplifiedLogger log, String[] args) throws Exception {
+
         this.log = log;
 
         for (String arg : args) {
+
             if ("-v".equals(arg)) {
+
                 exclude = true;
-            } else if ("-c".equals(arg)) {
+
+            }
+            else if ("-c".equals(arg)) {
+
                 count = true;
-            } else if ("-s".equals(arg)) {
+
+            }
+            else if ("-s".equals(arg)) {
+
                 split = true;
-            } else if (arg.startsWith("-")) {
+
+            }
+            else if (arg.startsWith("-")) {
+
                 throw new Exception("NOT YET IMPLEMENTED EXCEPTION: 'grep' doesn't know how to handle " + arg);
-            } else if (regex == null) {
+
+            }
+            else if (regex == null) {
+
                 regex = arg;
-            } else if (threadDumpFile == null) {
+
+            }
+            else if (threadDumpFile == null) {
+
                 threadDumpFile = new ThreadDumpFile(arg);
             }
         }
 
-        if (threadDumpFile == null)
-        {
+        if (threadDumpFile == null) {
+
             threadDumpFile = new ThreadDumpFile(regex);
             regex = null;
         }
 
-        if (exclude && regex == null)
-        {
+        if (exclude && regex == null) {
+
             throw new UserErrorException("-v requires a regular expression");
         }
     }
 
-    // Command implementation ----------------------------------------------------------------------
+    // Command implementation ------------------------------------------------------------------------------------------
 
-    public void run() throws Exception
-    {
-        if (split)
-        {
+    public void run() throws Exception {
+
+        if (split) {
+
             split(threadDumpFile);
             return;
         }
@@ -87,20 +104,20 @@ public class Grep implements Command
 
         int cnt = 0;
 
-        for(Iterator<ThreadDump> i = threadDumpFile.iterator(); i.hasNext(); )
-        {
+        for(Iterator<ThreadDump> i = threadDumpFile.iterator(); i.hasNext(); ) {
+
             ThreadDump td = i.next();
 
-            for(Iterator<StackTrace> j = td.iterator(); j.hasNext(); )
-            {
+            for(Iterator<StackTrace> j = td.iterator(); j.hasNext(); ) {
+
                 StackTrace d = j.next();
 
-                if (d.matches(regex))
-                {
-                    if (!exclude)
-                    {
-                        if (count)
-                        {
+                if (d.matches(regex)) {
+
+                    if (!exclude) {
+
+                        if (count) {
+
                             cnt ++;
                         }
                         else
@@ -132,7 +149,7 @@ public class Grep implements Command
         }
     }
 
-    // Public --------------------------------------------------------------------------------------
+    // Public ----------------------------------------------------------------------------------------------------------
 
     public boolean isExclude()
     {
@@ -159,11 +176,11 @@ public class Grep implements Command
         return threadDumpFile.getFile();
     }
 
-    // Package protected ---------------------------------------------------------------------------
+    // Package protected -----------------------------------------------------------------------------------------------
 
-    // Protected -----------------------------------------------------------------------------------
+    // Protected -------------------------------------------------------------------------------------------------------
 
-    // Private -------------------------------------------------------------------------------------
+    // Private ---------------------------------------------------------------------------------------------------------
 
     private void split(ThreadDumpFile f) throws Exception
     {
@@ -227,6 +244,6 @@ public class Grep implements Command
         return new File(prefix + "-" + base + "-thread-dump" + ext);
     }
 
-    // Inner classes -------------------------------------------------------------------------------
+    // Inner classes ---------------------------------------------------------------------------------------------------
 
 }

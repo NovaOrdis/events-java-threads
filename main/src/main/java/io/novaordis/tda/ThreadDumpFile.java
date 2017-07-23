@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -40,19 +41,27 @@ public class ThreadDumpFile {
 
     /**
      * @param fileName a thread dump file name
+     *
+     * @throws IOException
+     * @throws UserErrorException
      */
-    public ThreadDumpFile(String fileName) throws Exception {
+    public ThreadDumpFile(String fileName) throws IOException, UserErrorException {
 
         this(new File(fileName));
     }
 
-    public ThreadDumpFile(File file) throws Exception {
+    /**
+     * @throws FileNotFoundException if the file is not found
+     * @throws IOException
+     * @throws UserErrorException
+     */
+    public ThreadDumpFile(File file) throws IOException, UserErrorException {
 
         this.file = file;
 
         if (!file.isFile()) {
 
-            throw new FileNotFoundException("no such file '" + file + "'");
+            throw new UserErrorException("no such file: " + file);
         }
 
         threadDumps = new ArrayList<>();
@@ -82,14 +91,19 @@ public class ThreadDumpFile {
         return threadDumps.get(index);
     }
 
-    // Package protected ---------------------------------------------------------------------------
+    // Package protected -----------------------------------------------------------------------------------------------
 
-    // Protected -----------------------------------------------------------------------------------
+    // Protected -------------------------------------------------------------------------------------------------------
 
-    // Private -------------------------------------------------------------------------------------
+    // Private ---------------------------------------------------------------------------------------------------------
 
-    private void parse(File f) throws Exception
-    {
+    private void parse(File f) throws IOException, UserErrorException {
+
+        if (!f.isFile()) {
+
+            throw new UserErrorException("no such file: " + f);
+        }
+
         // look for "Full thread dump" and grab the time stamp from the previous line, if no
         // "Full thread dump" is found, handle the entire file as a single thread dump
 
@@ -98,8 +112,8 @@ public class ThreadDumpFile {
 
         int expected = -1;
 
-        try
-        {
+        try {
+
             br = new BufferedReader(new FileReader(f));
 
 
@@ -109,38 +123,42 @@ public class ThreadDumpFile {
 
             boolean expectEmptyLine = false;
             String previous = null;
-            String line = null;
+            String line;
 
-            while((line = br.readLine()) != null)
-            {
-                if (expectEmptyLine)
-                {
+            while((line = br.readLine()) != null) {
+
+                if (expectEmptyLine) {
+
                     // sanity check, this is one way to insure that the thread dump is reasonably
                     // syntactically correct
-                    if (line.trim().length() != 0)
-                    {
+                    if (line.trim().length() != 0) {
+
                         throw new UserErrorException("\"" + previous + "\" not followed by an empty line", lineNumber);
                     }
 
                     expectEmptyLine = false;
                 }
-                else if (line.startsWith(THREAD_DUMP_HEADER))
-                {
+                else if (line.startsWith(THREAD_DUMP_HEADER)) {
+
                     // extract the timestamp, if possible and install the new "current" thread dump
 
                     Date timestamp = null;
 
-                    if (previous != null)
-                    {
-                        // attempt to convert
+                    if (previous != null) {
 
-                        try
-                        {
+                        //
+                        // attempt to convert
+                        //
+
+                        try {
+
                             timestamp = (Date)TIMESTAMP_FORMAT.parseObject(previous);
                         }
-                        catch(Exception e)
-                        {
+                        catch(Exception e) {
+
+                            //
                             // that is fine, we will just ignore it
+                            //
                         }
                     }
 
@@ -150,8 +168,8 @@ public class ThreadDumpFile {
                     // process fragments
                     current.close();
 
-                    if (current.getThreadCount() > 0)
-                    {
+                    if (current.getThreadCount() > 0) {
+
                         threadDumps.add(current);
                     }
 
@@ -159,8 +177,8 @@ public class ThreadDumpFile {
                     current = new ThreadDump(file, timestamp, line, lineNumber);
                     expectEmptyLine = true;
                 }
-                else if (current != null)
-                {
+                else {
+
                     current.append(line, lineNumber);
                 }
 
@@ -171,25 +189,25 @@ public class ThreadDumpFile {
             current.close();
 
             // first check for error conditions
-            if (current.getThreadCount() == 0 && current.getHeader() != null)
-            {
+            if (current.getThreadCount() == 0 && current.getHeader() != null) {
+
                 throw new UserErrorException("Empty thread dump", current.getHeaderLineNumber());
             }
 
-            if (current.getThreadCount() > 0)
-            {
+            if (current.getThreadCount() > 0) {
+
                 threadDumps.add(current);
             }
         }
-        finally
-        {
-            if (br != null)
-            {
+        finally {
+
+            if (br != null) {
+
                 br.close();
             }
         }
 
     }
 
-    // Inner classes -------------------------------------------------------------------------------
+    // Inner classes ---------------------------------------------------------------------------------------------------
 }

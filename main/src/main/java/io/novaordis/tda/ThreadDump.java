@@ -167,11 +167,11 @@ public class ThreadDump {
 
     // Protected -------------------------------------------------------------------------------------------------------
 
-    void append(String line, long lineNumber) throws Exception {
+    void append(String line, long lineNumber)  {
 
         if (closed) {
 
-            throw new Exception(this + " is closed, no more lines can be appended to it");
+            throw new IllegalStateException(this + " is closed, no more lines can be appended to it");
         }
 
         if (line.trim().length() == 0) {

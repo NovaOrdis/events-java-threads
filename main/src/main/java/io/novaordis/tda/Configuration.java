@@ -58,7 +58,7 @@ class Configuration {
             //
             // anything else is a Grep command and the following argument is interpreted as a regular expression
             //
-            
+
             c = new Grep(log, args);
         }
     }

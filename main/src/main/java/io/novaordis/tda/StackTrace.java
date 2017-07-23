@@ -152,7 +152,7 @@ public class StackTrace {
     /**
      * Appends a line.
      */
-    void append(String line, long lineNumber) throws Exception {
+    void append(String line, long lineNumber) {
 
         if (firstLine == null) {
 

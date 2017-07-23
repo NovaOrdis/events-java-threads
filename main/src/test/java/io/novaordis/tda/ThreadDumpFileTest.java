@@ -4,45 +4,45 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.FileNotFoundException;
-
 /**
  * @author <a href="mailto:ovidiu@novaordis.com">Ovidiu Feodorov</a>
  *
  * Copyright 2010 Ovidiu Feodorov
  */
 
-public class ThreadDumpFileTest extends Assert
-{
-    // Constants -----------------------------------------------------------------------------------
+public class ThreadDumpFileTest extends Assert {
+
+    // Constants -------------------------------------------------------------------------------------------------------
 
     private static final Logger log = Logger.getLogger(ThreadDumpFileTest.class);
 
-    // Static --------------------------------------------------------------------------------------
+    // Static ----------------------------------------------------------------------------------------------------------
 
-    // Attributes ----------------------------------------------------------------------------------
+    // Attributes ------------------------------------------------------------------------------------------------------
 
-    // Constructors --------------------------------------------------------------------------------
+    // Constructors ----------------------------------------------------------------------------------------------------
 
-    // Public --------------------------------------------------------------------------------------
+    // Public ----------------------------------------------------------------------------------------------------------
 
     @Test
-    public void testCtor_NoFile() throws Exception
-    {
-        try
-        {
+    public void testCtor_NoFile() throws Exception {
+
+        try {
+
             new ThreadDumpFile("/no/such/file/obviously");
             fail("should have failed with FileNotFoundException");
         }
-        catch(FileNotFoundException e)
-        {
-            log.info(e.getMessage());
+        catch(UserErrorException e) {
+
+            String msg = e.getMessage();
+
+            assertTrue(msg.contains("no such file"));
         }
     }
 
     @Test
-    public void testCtor_TimestampAndHeader() throws Exception
-    {
+    public void testCtor_TimestampAndHeader() throws Exception {
+
         ThreadDumpFile tdf = new ThreadDumpFile(
             "./src/test/resources/samples/010_thread_dump_file_timestamp_header.txt");
 
@@ -58,8 +58,8 @@ public class ThreadDumpFileTest extends Assert
     }
 
     @Test
-    public void testCtor_JustHeader() throws Exception
-    {
+    public void testCtor_JustHeader() throws Exception {
+
         ThreadDumpFile tdf = new ThreadDumpFile(
             "./src/test/resources/samples/011_thread_dump_header_no_timestamp.txt");
 
@@ -73,8 +73,8 @@ public class ThreadDumpFileTest extends Assert
     }
 
     @Test
-    public void testCtor_TwoThreadDumps() throws Exception
-    {
+    public void testCtor_TwoThreadDumps() throws Exception {
+
         ThreadDumpFile tdf =
             new ThreadDumpFile("./src/test/resources/samples/012_two_thread_dumps.txt");
 
@@ -96,25 +96,25 @@ public class ThreadDumpFileTest extends Assert
     }
 
     @Test
-    public void testCtor_FullThreadDumpOnFirstLine() throws Exception
-    {
+    public void testCtor_FullThreadDumpOnFirstLine() throws Exception {
+
         // this is NOT a fragment, but an incomplete thread dump
 
-        try
-        {
+        try {
+
             new ThreadDumpFile("./src/test/resources/samples/002_1_FullThreadDumpOnFirstLine.txt");
             fail("should have failed with UserErrorException");
         }
-        catch(UserErrorException e)
-        {
+        catch(UserErrorException e) {
+
             log.info(e.getMessage());
             assertEquals(1, e.getLineNumber());
         }
     }
 
     @Test
-    public void testCtor_FullThreadDumpOnFirstLine_2() throws Exception
-    {
+    public void testCtor_FullThreadDumpOnFirstLine_2() throws Exception {
+
         ThreadDumpFile tdf =
             new ThreadDumpFile("./src/test/resources/samples/002_2_FullThreadDumpOnFirstLine.txt");
 
@@ -129,40 +129,40 @@ public class ThreadDumpFileTest extends Assert
     }
 
     @Test
-    public void testCtor_FullThreadDumpOnInvalidTimestamp() throws Exception
-    {
+    public void testCtor_FullThreadDumpOnInvalidTimestamp() throws Exception {
+
         // this is NOT a fragment, but an incomplete thread dump
 
-        try
-        {
+        try {
+
             new ThreadDumpFile("./src/test/resources/samples/003_FullThreadDumpInvalidTimestamp.txt");
             fail("should have failed with UserErrorException");
         }
-        catch(UserErrorException e)
-        {
+        catch(UserErrorException e) {
+
             log.info(e.getMessage());
             assertEquals(5, e.getLineNumber());
         }
     }
 
     @Test
-    public void testCtor_NoEmptyLineAfterHeader() throws Exception
-    {
-        try
-        {
+    public void testCtor_NoEmptyLineAfterHeader() throws Exception {
+
+        try {
+
             new ThreadDumpFile("./src/test/resources/samples/005_NoEmptyLine.txt");
             fail("should have failed with UserErrorException");
         }
-        catch(UserErrorException e)
-        {
+        catch(UserErrorException e) {
+
             log.info(e.getMessage());
             assertEquals(9, e.getLineNumber());
         }
     }
 
     @Test
-    public void testCtor_Minimal() throws Exception
-    {
+    public void testCtor_Minimal() throws Exception {
+
         ThreadDumpFile tdf = new ThreadDumpFile("./src/test/resources/samples/004_Minimal.txt");
 
         assertEquals(1, tdf.getCount());
@@ -176,8 +176,8 @@ public class ThreadDumpFileTest extends Assert
     }
 
     @Test
-    public void testCtor_Real_001() throws Exception
-    {
+    public void testCtor_Real_001() throws Exception {
+
         ThreadDumpFile tdf = new ThreadDumpFile("./src/test/resources/samples/001.txt");
 
         assertEquals(1, tdf.getCount());
@@ -193,8 +193,8 @@ public class ThreadDumpFileTest extends Assert
     }
 
     @Test
-    public void testFilteredFragment_NoCR() throws Exception
-    {
+    public void testFilteredFragment_NoCR() throws Exception {
+
         ThreadDumpFile tdf =
             new ThreadDumpFile("./src/test/resources/samples/013_filtered_fragment_no_CR.txt");
 
@@ -207,8 +207,8 @@ public class ThreadDumpFileTest extends Assert
     }
 
     @Test
-    public void testFilteredFragment() throws Exception
-    {
+    public void testFilteredFragment() throws Exception {
+
         ThreadDumpFile tdf =
             new ThreadDumpFile("./src/test/resources/samples/014_filtered_fragment.txt");
 
@@ -220,11 +220,11 @@ public class ThreadDumpFileTest extends Assert
         assertEquals(2, td.getThreadCount());
     }
 
-    // Package protected ---------------------------------------------------------------------------
+    // Package protected -----------------------------------------------------------------------------------------------
 
-    // Protected -----------------------------------------------------------------------------------
+    // Protected -------------------------------------------------------------------------------------------------------
 
-    // Private -------------------------------------------------------------------------------------
+    // Private ---------------------------------------------------------------------------------------------------------
 
-    // Inner classes -------------------------------------------------------------------------------
+    // Inner classes ---------------------------------------------------------------------------------------------------
 }
