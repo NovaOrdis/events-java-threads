@@ -63,6 +63,11 @@ public class Split implements Command {
                 threadDumpFile = new ThreadDumpFile(arg);
             }
         }
+
+        if (threadDumpFile == null) {
+
+            throw new UserErrorException("no filename provided");
+        }
     }
 
     // Command implementation ------------------------------------------------------------------------------------------
