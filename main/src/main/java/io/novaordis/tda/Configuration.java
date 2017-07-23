@@ -4,6 +4,7 @@ package io.novaordis.tda;
 import io.novaordis.tda.command.Diff;
 import io.novaordis.tda.command.Grep;
 import io.novaordis.tda.command.Help;
+import io.novaordis.tda.command.Split;
 import io.novaordis.tda.command.Version;
 
 /**
@@ -48,6 +49,12 @@ class Configuration {
             String[] args2 = new String[args.length - 1];
             System.arraycopy(args, 1, args2, 0, args2.length);
             c = new Diff(log, args2);
+        }
+        else if (Split.LITERAL.equals(command)) {
+
+            String[] args2 = new String[args.length - 1];
+            System.arraycopy(args, 1, args2, 0, args2.length);
+            c = new Split(log, args2);
         }
         else if (Help.LITERAL.equals(command)) {
 

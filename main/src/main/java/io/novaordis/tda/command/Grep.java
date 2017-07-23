@@ -19,11 +19,10 @@ import java.util.Iterator;
  *
  * Copyright 2010 Ovidiu Feodorov
  */
-public class Grep implements Command
-{
+public class Grep implements Command {
+
     // Constants -------------------------------------------------------------------------------------------------------
 
-    public static final Format TIMESTAMP_PREFIX = new SimpleDateFormat("yyyy.MM.dd-HH.mm.ss");
 
     // Static ----------------------------------------------------------------------------------------------------------
 
@@ -174,68 +173,6 @@ public class Grep implements Command
     // Protected -------------------------------------------------------------------------------------------------------
 
     // Private ---------------------------------------------------------------------------------------------------------
-
-    private void split(ThreadDumpFile f) throws Exception
-    {
-        if (f.getCount() == 1)
-        {
-            log.info("one thread dump in file, nothing to split");
-            return;
-        }
-
-        int counter = 0;
-
-        for(Iterator<ThreadDump> i = f.iterator(); i.hasNext(); )
-        {
-            ThreadDump td = i.next();
-
-            Date timestamp = td.getTimestamp();
-
-            File splitFile = generateSplitFile(counter ++, timestamp, f.getFile());
-
-            log.info("writing " + splitFile.getName());
-            td.toFile(splitFile);
-        }
-    }
-
-    /**
-     * @param timestamp may be null, in which case only the counter should be used. If not null, both the counter and
-     *                  timestamp will be used.
-     */
-    private File generateSplitFile(int counter, Date timestamp, File f) throws Exception
-    {
-        String s = Integer.toString(counter);
-        if (counter < 10) {
-            s = "0" + s;
-        }
-
-        if (timestamp != null) {
-
-            s += "-";
-            s += TIMESTAMP_PREFIX.format(timestamp);
-        }
-
-        return generateSplitFile(s, f);
-    }
-
-    private File generateSplitFile(String prefix, File f) throws Exception
-    {
-        //File parent = f.getParentFile();
-
-        String name = f.getName();
-        String base = name;
-        String ext = "";
-
-        int i = name.lastIndexOf(".");
-
-        if (i != -1)
-        {
-            base = name.substring(0, i);
-            ext = "." + name.substring(i + 1);
-        }
-
-        return new File(prefix + "-" + base + "-thread-dump" + ext);
-    }
 
     // Inner classes ---------------------------------------------------------------------------------------------------
 
