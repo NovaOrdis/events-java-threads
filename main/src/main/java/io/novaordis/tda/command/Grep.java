@@ -37,7 +37,6 @@ public class Grep implements Command
 
     private boolean exclude;
     private boolean count;
-    private boolean split;
 
     // Constructors ----------------------------------------------------------------------------------------------------
 
@@ -57,15 +56,9 @@ public class Grep implements Command
                 count = true;
 
             }
-            else if ("-s".equals(arg)) {
-
-                split = true;
-
-            }
             else if (arg.startsWith("-")) {
 
-                throw new Exception("NOT YET IMPLEMENTED EXCEPTION: 'grep' doesn't know how to handle " + arg);
-
+                throw new UserErrorException("unknown grep option: '" + arg + "'");
             }
             else if (regex == null) {
 
@@ -94,11 +87,11 @@ public class Grep implements Command
 
     public void run() throws Exception {
 
-        if (split) {
-
-            split(threadDumpFile);
-            return;
-        }
+//        if (split) {
+//
+//            split(threadDumpFile);
+//            return;
+//        }
 
         // grep functionality
 
