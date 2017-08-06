@@ -3,7 +3,7 @@
 #
 # see help() below
 #
-VERSION=6
+VERSION=7
 
 #
 # configuration
@@ -14,24 +14,26 @@ VERSION=6
 # behavior if not specified is to create a dated sub-directory in the current directory every
 # time the script is executed. Overridden by the command line argument --dir=...
 #
-dir=
+dir=${TDC_TARGET_DIR}
 
 #
 # the interval (in seconds) between successive readings
 #
 interval=30
+[ -n "${TDC_INTERVAL}" ] && interval=${TDC_INTERVAL}
 
 #
 # regular expression used to select the java process we want to take thread dumps of. Overridden by
 # command line argument --regex=...
 #
 regex="java.*D.Standalone"
+[ -n "${TDC_REGEX}" ] && regex="${TDC_REGEX}"
 
 #
 # java_home to use. If set here, will override the JAVA_HOME environment variable, if present, but
 # it will be overridden by --java-home= command line argument, if present.
 #
-java_home=
+java_home="${TDC_JAVA_HOME}"
 
 #
 # A "fail-fast" protection for the case collection has to be done with a specific Unix user. If
@@ -39,11 +41,10 @@ java_home=
 # the collector will fail quickly with an explanatory message, instead of waiting until jstack
 # cannot access the remote java process and fails with a more obscure message
 #
-
 user=jboss
+[ -n "${TDC_USER}" ] && user=${TDC_USER}
 
 VERBOSE=false
-
 
 function help() {
 
