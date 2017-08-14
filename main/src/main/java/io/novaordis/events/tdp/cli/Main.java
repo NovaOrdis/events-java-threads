@@ -40,7 +40,9 @@ public class Main {
         try {
 
             Parser parser = new JavaThreadDumpParser();
+
             ProcedureFactory procedureFactory = new TDProcedureFactory();
+
             EventParserRuntime runtime = new EventParserRuntime(args, APPLICATION_NAME, procedureFactory, parser);
 
             if (runtime.getConfiguration().isHelp()) {
