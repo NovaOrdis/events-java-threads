@@ -2,7 +2,7 @@
 # release configuration 
 #
 qualification:
-  os.command.to.get.installed.version: tda version
+  os.command.to.get.installed.version: td version
 
 build:
 
