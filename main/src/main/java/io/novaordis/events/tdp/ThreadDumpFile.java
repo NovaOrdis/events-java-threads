@@ -24,6 +24,7 @@ import java.util.List;
  *
  * Copyright 2010 Ovidiu Feodorov
  */
+@Deprecated
 public class ThreadDumpFile {
 
     // Constants -------------------------------------------------------------------------------------------------------
