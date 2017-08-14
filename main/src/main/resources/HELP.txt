@@ -1,11 +1,12 @@
-Thread Dump Analyzer.
+Events Java Thread Dump Parser.
 
 Usage:
 
-    tda [options] <regex|command> <thread-dump-file> [thread-dump-file, ...]
+    td [options] <regex|command> <thread-dump-file> [thread-dump-file, ...]
 
 
-tda is a command-line utility that can be used to process Java thread dumps.
+td is a command-line utility that parses Java thread dump file and turns them into events that
+can be further analyzed and correlated.
 
 tda works by default in a manner similar to grep, processing the thread dump file sequentially,
 one thread dump at a time.  Multiple thread dumps (i.e. the result of multiple invocations, at
@@ -17,5 +18,5 @@ The utility supports alternate commands ("diff", "split", etc.).
 
 User manual:
 
-    https://kb.novaordis.com/index.php/Tda_User_Manual
+    https://kb.novaordis.com/index.php/Td_User_Manual
 
