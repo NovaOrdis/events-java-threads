@@ -19,10 +19,9 @@ package io.novaordis.tda.command;
 
 import io.novaordis.tda.Command;
 import io.novaordis.tda.SimplifiedLogger;
-import io.novaordis.tda.StackTrace;
 import io.novaordis.tda.ThreadDump;
 import io.novaordis.tda.ThreadDumpFile;
-import io.novaordis.tda.UserErrorException;
+import io.novaordis.utilities.UserErrorException;
 
 import java.io.File;
 import java.text.Format;

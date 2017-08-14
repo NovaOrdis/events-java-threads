@@ -21,7 +21,7 @@ import io.novaordis.tda.SimplifiedLogger;
 import io.novaordis.tda.StackTrace;
 import io.novaordis.tda.ThreadDump;
 import io.novaordis.tda.ThreadDumpFile;
-import io.novaordis.tda.UserErrorException;
+import io.novaordis.utilities.UserErrorException;
 
 import java.io.File;
 import java.io.FileNotFoundException;

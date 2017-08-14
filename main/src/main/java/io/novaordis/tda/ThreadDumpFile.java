@@ -1,5 +1,8 @@
 package io.novaordis.tda;
 
+import io.novaordis.events.api.parser.ParsingException;
+import io.novaordis.utilities.UserErrorException;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -45,7 +48,7 @@ public class ThreadDumpFile {
      * @throws IOException
      * @throws UserErrorException
      */
-    public ThreadDumpFile(String fileName) throws IOException, UserErrorException {
+    public ThreadDumpFile(String fileName) throws IOException, ParsingException, UserErrorException {
 
         this(new File(fileName));
     }
@@ -55,7 +58,7 @@ public class ThreadDumpFile {
      * @throws IOException
      * @throws UserErrorException
      */
-    public ThreadDumpFile(File file) throws IOException, UserErrorException {
+    public ThreadDumpFile(File file) throws IOException, ParsingException, UserErrorException {
 
         this.file = file;
 
@@ -97,7 +100,7 @@ public class ThreadDumpFile {
 
     // Private ---------------------------------------------------------------------------------------------------------
 
-    private void parse(File f) throws IOException, UserErrorException {
+    private void parse(File f) throws IOException, ParsingException, UserErrorException {
 
         if (!f.isFile()) {
 
@@ -133,7 +136,9 @@ public class ThreadDumpFile {
                     // syntactically correct
                     if (line.trim().length() != 0) {
 
-                        throw new UserErrorException("\"" + previous + "\" not followed by an empty line", lineNumber);
+                        throw new ParsingException( "\"" + previous + "\" not followed by an empty line", lineNumber);
+
+
                     }
 
                     expectEmptyLine = false;
@@ -191,7 +196,7 @@ public class ThreadDumpFile {
             // first check for error conditions
             if (current.getThreadCount() == 0 && current.getHeader() != null) {
 
-                throw new UserErrorException("Empty thread dump", current.getHeaderLineNumber());
+                throw new ParsingException("Empty thread dump", current.getHeaderLineNumber());
             }
 
             if (current.getThreadCount() > 0) {

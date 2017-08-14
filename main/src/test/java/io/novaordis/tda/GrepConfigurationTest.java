@@ -1,6 +1,7 @@
 package io.novaordis.tda;
 
 import io.novaordis.tda.command.Grep;
+import io.novaordis.utilities.UserErrorException;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;

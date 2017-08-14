@@ -17,7 +17,7 @@
 package io.novaordis.tda.command;
 
 import io.novaordis.tda.MockSimplifiedLogger;
-import io.novaordis.tda.UserErrorException;
+import io.novaordis.utilities.UserErrorException;
 import org.junit.Test;
 
 import java.io.File;

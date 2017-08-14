@@ -8,7 +8,7 @@
 
     <groupId>io.novaordis.events.tdp</groupId>
     <artifactId>events-tdp-root</artifactId>
-    <version>1.0.4-SNAPSHOT-4</version>
+    <version>1.0.4-SNAPSHOT-5</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -19,7 +19,7 @@
 
         <slf4j.version>1.7.12</slf4j.version>
         <junit.version>4.12</junit.version>
-
+        <events.cli.version>1.0.2-SNAPSHOT-18</events.cli.version>
 
         <!--
             End of Dependencies
@@ -40,6 +40,11 @@
     </modules>
 
     <dependencies>
+        <dependency>
+            <groupId>io.novaordis.events.cli</groupId>
+            <artifactId>events-cli</artifactId>
+            <version>${events.cli.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>

@@ -1,5 +1,7 @@
 package io.novaordis.tda;
 
+import io.novaordis.utilities.UserErrorException;
+
 /**
  * @author <a href="mailto:ovidiu@novaordis.com">Ovidiu Feodorov</a>
  *

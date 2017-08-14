@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package io.novaordis.tda.command;
+package io.novaordis;
 
-import io.novaordis.tda.MockSimplifiedLogger;
-import io.novaordis.utilities.UserErrorException;
-import org.junit.Test;
+import io.novaordis.events.processing.Procedure;
+import io.novaordis.events.processing.ProcedureFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.util.List;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
- * @since 4/26/17
+ * @since 8/14/17
  */
-public class SplitTest {
+public class TDProcedureFactory implements ProcedureFactory {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
@@ -38,30 +35,16 @@ public class SplitTest {
 
     // Constructors ----------------------------------------------------------------------------------------------------
 
+    // ProcedureFactory ------------------------------------------------------------------------------------------------
+
+    @Override
+    public Procedure find(String commandLineLabel, int from, List<String> arguments) {
+
+        throw new RuntimeException("find() NOT YET IMPLEMENTED");
+    }
+
     // Public ----------------------------------------------------------------------------------------------------------
 
-    // Tests -----------------------------------------------------------------------------------------------------------
-
-    // constructor -----------------------------------------------------------------------------------------------------
-
-    @Test
-    public void constructor_NoFilenameProvided() throws Exception {
-
-        MockSimplifiedLogger ml = new MockSimplifiedLogger();
-
-        String[] args = new String[] {};
-
-        try {
-
-            new Split(ml, args);
-            fail("should have thrown exception");
-        }
-        catch(UserErrorException e) {
-
-            String msg = e.getMessage();
-            assertTrue(msg.contains("no filename provided"));
-        }
-    }
     // Package protected -----------------------------------------------------------------------------------------------
 
     // Protected -------------------------------------------------------------------------------------------------------

@@ -1,5 +1,7 @@
 package io.novaordis.tda;
 
+import io.novaordis.events.api.parser.ParsingException;
+import io.novaordis.utilities.UserErrorException;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
@@ -105,10 +107,10 @@ public class ThreadDumpFileTest extends Assert {
             new ThreadDumpFile("./src/test/resources/samples/002_1_FullThreadDumpOnFirstLine.txt");
             fail("should have failed with UserErrorException");
         }
-        catch(UserErrorException e) {
+        catch(ParsingException e) {
 
             log.info(e.getMessage());
-            assertEquals(1, e.getLineNumber());
+            assertEquals(1, e.getLineNumber().longValue());
         }
     }
 
@@ -138,10 +140,10 @@ public class ThreadDumpFileTest extends Assert {
             new ThreadDumpFile("./src/test/resources/samples/003_FullThreadDumpInvalidTimestamp.txt");
             fail("should have failed with UserErrorException");
         }
-        catch(UserErrorException e) {
+        catch(ParsingException e) {
 
             log.info(e.getMessage());
-            assertEquals(5, e.getLineNumber());
+            assertEquals(5, e.getLineNumber().longValue());
         }
     }
 
@@ -153,10 +155,10 @@ public class ThreadDumpFileTest extends Assert {
             new ThreadDumpFile("./src/test/resources/samples/005_NoEmptyLine.txt");
             fail("should have failed with UserErrorException");
         }
-        catch(UserErrorException e) {
+        catch(ParsingException e) {
 
             log.info(e.getMessage());
-            assertEquals(9, e.getLineNumber());
+            assertEquals(9, e.getLineNumber().longValue());
         }
     }
 

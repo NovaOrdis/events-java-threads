@@ -16,6 +16,8 @@
 
 package io.novaordis.tda;
 
+import io.novaordis.utilities.UserErrorException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

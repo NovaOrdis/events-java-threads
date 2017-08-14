@@ -14,21 +14,15 @@
  * limitations under the License.
  */
 
-package io.novaordis.tda.command;
+package io.novaordis.tda.cli;
 
-import io.novaordis.tda.MockSimplifiedLogger;
-import io.novaordis.utilities.UserErrorException;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
- * @since 4/26/17
+ * @since 8/14/17
  */
-public class SplitTest {
+public class MainTest {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
@@ -42,26 +36,13 @@ public class SplitTest {
 
     // Tests -----------------------------------------------------------------------------------------------------------
 
-    // constructor -----------------------------------------------------------------------------------------------------
-
     @Test
-    public void constructor_NoFilenameProvided() throws Exception {
+    public void endToEnd() throws Exception {
 
-        MockSimplifiedLogger ml = new MockSimplifiedLogger();
+        throw new RuntimeException("RETURN HERE");
 
-        String[] args = new String[] {};
-
-        try {
-
-            new Split(ml, args);
-            fail("should have thrown exception");
-        }
-        catch(UserErrorException e) {
-
-            String msg = e.getMessage();
-            assertTrue(msg.contains("no filename provided"));
-        }
     }
+
     // Package protected -----------------------------------------------------------------------------------------------
 
     // Protected -------------------------------------------------------------------------------------------------------

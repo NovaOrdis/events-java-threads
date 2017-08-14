@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package io.novaordis.tda.command;
+package io.novaordis.tda;
 
-import io.novaordis.tda.MockSimplifiedLogger;
-import io.novaordis.utilities.UserErrorException;
-import org.junit.Test;
+import io.novaordis.events.api.event.Event;
+import io.novaordis.events.api.parser.Parser;
+import io.novaordis.events.api.parser.ParsingException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.util.List;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
- * @since 4/26/17
+ * @since 8/14/17
  */
-public class SplitTest {
+public class JavaThreadDumpParser implements Parser {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
@@ -38,30 +36,25 @@ public class SplitTest {
 
     // Constructors ----------------------------------------------------------------------------------------------------
 
+    // Parser implementation -------------------------------------------------------------------------------------------
+
+    @Override
+    public List<Event> parse(String line) throws ParsingException {
+        throw new RuntimeException("parse() NOT YET IMPLEMENTED");
+    }
+
+    @Override
+    public List<Event> close() throws ParsingException {
+        throw new RuntimeException("close() NOT YET IMPLEMENTED");
+    }
+
+    @Override
+    public long getLineNumber() {
+        throw new RuntimeException("getLineNumber() NOT YET IMPLEMENTED");
+    }
+
     // Public ----------------------------------------------------------------------------------------------------------
 
-    // Tests -----------------------------------------------------------------------------------------------------------
-
-    // constructor -----------------------------------------------------------------------------------------------------
-
-    @Test
-    public void constructor_NoFilenameProvided() throws Exception {
-
-        MockSimplifiedLogger ml = new MockSimplifiedLogger();
-
-        String[] args = new String[] {};
-
-        try {
-
-            new Split(ml, args);
-            fail("should have thrown exception");
-        }
-        catch(UserErrorException e) {
-
-            String msg = e.getMessage();
-            assertTrue(msg.contains("no filename provided"));
-        }
-    }
     // Package protected -----------------------------------------------------------------------------------------------
 
     // Protected -------------------------------------------------------------------------------------------------------

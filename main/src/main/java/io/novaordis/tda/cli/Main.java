@@ -14,25 +14,48 @@
  * limitations under the License.
  */
 
-package io.novaordis.tda.command;
+package io.novaordis.tda.cli;
 
-import io.novaordis.tda.MockSimplifiedLogger;
+import io.novaordis.TDProcedureFactory;
+import io.novaordis.events.api.parser.Parser;
+import io.novaordis.events.cli.EventParserRuntime;
+import io.novaordis.events.processing.ProcedureFactory;
+import io.novaordis.tda.JavaThreadDumpParser;
 import io.novaordis.utilities.UserErrorException;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
- * @since 4/26/17
+ * @since 8/14/17
  */
-public class SplitTest {
+public class Main {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
+    public static final String APPLICATION_NAME = "td";
+
     // Static ----------------------------------------------------------------------------------------------------------
+
+    public static void main(String[] args) throws Exception {
+
+        try {
+
+            Parser parser = new JavaThreadDumpParser();
+            ProcedureFactory procedureFactory = new TDProcedureFactory();
+            EventParserRuntime runtime = new EventParserRuntime(args, APPLICATION_NAME, procedureFactory, parser);
+
+            if (runtime.getConfiguration().isHelp()) {
+
+                runtime.displayHelp(APPLICATION_NAME);
+                return;
+            }
+
+            runtime.run();
+
+        } catch (UserErrorException e) {
+
+            System.err.println(e.getMessage());
+        }
+    }
 
     // Attributes ------------------------------------------------------------------------------------------------------
 
@@ -40,28 +63,6 @@ public class SplitTest {
 
     // Public ----------------------------------------------------------------------------------------------------------
 
-    // Tests -----------------------------------------------------------------------------------------------------------
-
-    // constructor -----------------------------------------------------------------------------------------------------
-
-    @Test
-    public void constructor_NoFilenameProvided() throws Exception {
-
-        MockSimplifiedLogger ml = new MockSimplifiedLogger();
-
-        String[] args = new String[] {};
-
-        try {
-
-            new Split(ml, args);
-            fail("should have thrown exception");
-        }
-        catch(UserErrorException e) {
-
-            String msg = e.getMessage();
-            assertTrue(msg.contains("no filename provided"));
-        }
-    }
     // Package protected -----------------------------------------------------------------------------------------------
 
     // Protected -------------------------------------------------------------------------------------------------------

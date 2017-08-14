@@ -1,5 +1,6 @@
 target
 IntelliJ/*.iws
+.idea/libraries
 workspace.xml
 .DS_Store
 ~$*.docx
