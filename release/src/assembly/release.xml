@@ -11,7 +11,7 @@
 
     <files>
         <file>
-            <source>./src/main/bash/tda</source>
+            <source>./src/main/bash/td</source>
             <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>
         </file>
