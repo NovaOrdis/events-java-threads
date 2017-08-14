@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.novaordis.events.tdp</groupId>
         <artifactId>events-tdp-root</artifactId>
-        <version>1.0.4-SNAPSHOT-2</version>
+        <version>1.0.4-SNAPSHOT-3</version>
     </parent>
 
     <artifactId>events-tdp-release</artifactId>
@@ -23,7 +23,7 @@
                           finalName impacts only the locally built artifact, not the name of the artifact that gets
                           deployed in the repository.
                     -->
-                    <finalName>tda-${project.version}</finalName>
+                    <finalName>td-${project.version}</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                     <descriptors>
                         <descriptor>src/assembly/release.xml</descriptor>
