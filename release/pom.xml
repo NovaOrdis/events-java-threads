@@ -44,8 +44,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.novaordis.tda</groupId>
-            <artifactId>tda</artifactId>
+            <groupId>io.novaordis.events.tdp</groupId>
+            <artifactId>events-tdp</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
