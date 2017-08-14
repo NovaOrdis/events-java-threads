@@ -4,10 +4,10 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <name>Thread Dump Analyzer</name>
+    <name>Events Java Thread Dump Parser</name>
 
-    <groupId>io.novaordis.tda</groupId>
-    <artifactId>tda-root</artifactId>
+    <groupId>io.novaordis.events.tdp</groupId>
+    <artifactId>events-tdp-root</artifactId>
     <version>1.0.4-SNAPSHOT-2</version>
     <packaging>pom</packaging>
 

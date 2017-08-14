@@ -1,9 +1,9 @@
-# TDA
+# Events Java Thread Dump Parser (events-tdp)
 
-TDA (Thread Dump Analyzer) is a Java library that parses JVM thread dumps and translates them into representations that facilitates further analysis.
+events-tdp (Events Java Thread Dump parser) is a Java library that parses JVM thread dumps and translates them into events.
 
-The project also contain collector and other scripts.
+The project also contains thread-dump-collector.sh and other scripts.
 
-## NOKB
+# NOKB
 
-https://kb.novaordis.com/index.php/Tda
+https://kb.novaordis.com/index.php/Events-tdp
