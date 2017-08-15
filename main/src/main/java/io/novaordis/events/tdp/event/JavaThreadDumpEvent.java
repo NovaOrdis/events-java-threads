@@ -16,13 +16,19 @@
 
 package io.novaordis.events.tdp.event;
 
+import io.novaordis.events.api.event.Event;
 import io.novaordis.events.api.event.GenericTimedEvent;
+import io.novaordis.events.api.event.Property;
 import io.novaordis.utilities.time.TimestampImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
@@ -61,9 +67,74 @@ public class JavaThreadDumpEvent extends GenericTimedEvent {
 
     /**
      * Preserves the order in which the stack traces were added.
+     *
+     * @exception IllegalArgumentException if the event is not a StackTraceEvent
      */
-    public void addStackTrace(StackTraceEvent e) {
+    public void addStackTraces(List<Event> stackTraces) {
 
+        if (stackTraces == null) {
+
+            throw new IllegalArgumentException("null stack trace list");
+        }
+
+        if (stackTraces.isEmpty()) {
+
+            return;
+        }
+
+        for(Event e: stackTraces) {
+
+            if (e instanceof StackTraceEvent) {
+
+                addStackTrace((StackTraceEvent)e);
+            }
+            else {
+
+                throw new IllegalArgumentException("not a StackTraceEvent: " + e);
+            }
+        }
+    }
+
+    /**
+     * Preserves the order in which the stack traces were added.
+     */
+    public void addStackTrace(StackTraceEvent stackTrace) {
+
+        if (stackTrace == null) {
+
+            throw new IllegalArgumentException("null stack trace");
+        }
+
+        String tid = stackTrace.getTidAsHexString();
+        if (tid == null) {
+
+            tid = UUID.randomUUID().toString();
+        }
+
+        setEventProperty(tid, stackTrace);
+    }
+
+    /**
+     * @return the stack traces in order in which they were added.
+     */
+    public List<StackTraceEvent> getStackTraceEvents() {
+
+        List<Property> properties = getProperties(StackTraceEvent.class);
+
+        if (properties.isEmpty()) {
+
+            return Collections.emptyList();
+        }
+
+        List<StackTraceEvent> result = new ArrayList<>(properties.size());
+
+        //noinspection Convert2streamapi
+        for(Property p: properties) {
+
+            result.add((StackTraceEvent)p.getValue());
+        }
+
+        return result;
     }
 
     @Override

@@ -16,7 +16,16 @@
 
 package io.novaordis.events.tdp.event;
 
+import io.novaordis.events.api.event.EndOfStreamEvent;
+import io.novaordis.events.api.event.Event;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
@@ -36,10 +45,77 @@ public class JavaThreadDumpEventTest {
 
     // Tests -----------------------------------------------------------------------------------------------------------
 
-    @Test
-    public void returnHere() throws Exception {
+    // addStackTraces() ------------------------------------------------------------------------------------------------
 
-        throw new RuntimeException("RETURN HERE");
+    @Test
+    public void addStackTraces_Null() throws Exception {
+
+        JavaThreadDumpEvent tde = new JavaThreadDumpEvent(7L, 1L);
+
+        try {
+
+            tde.addStackTraces(null);
+            fail("should have thrown exception");
+        }
+        catch(IllegalArgumentException e) {
+
+            String msg = e.getMessage();
+            assertTrue(msg.contains("null stack trace list"));
+        }
+    }
+
+    @Test
+    public void addStackTraces_NotAStackTraceEvent() throws Exception {
+
+        JavaThreadDumpEvent tde = new JavaThreadDumpEvent(7L, 1L);
+
+        List<Event> events = new ArrayList<>();
+
+        events.add(new StackTraceEvent(17L));
+        events.add(new EndOfStreamEvent());
+
+        try {
+
+            tde.addStackTraces(events);
+            fail("should have thrown exception");
+        }
+        catch(IllegalArgumentException e) {
+
+            String msg = e.getMessage();
+            assertTrue(msg.contains("not a StackTraceEvent"));
+        }
+    }
+
+    // addStackTrace() -------------------------------------------------------------------------------------------------
+
+    @Test
+    public void addStackTrace() throws Exception {
+
+        JavaThreadDumpEvent tde = new JavaThreadDumpEvent(7L, 1L);
+
+        StackTraceEvent t = new StackTraceEvent(17L);
+        tde.addStackTrace(t);
+
+        List<StackTraceEvent> traces = tde.getStackTraceEvents();
+
+        assertEquals(1, traces.size());
+        StackTraceEvent t2 = traces.get(0);
+        assertEquals(17L, t2.getLineNumber().longValue());
+
+        //
+        // add preserves order
+        //
+
+        StackTraceEvent t3 = new StackTraceEvent(21L);
+        tde.addStackTrace(t3);
+
+        List<StackTraceEvent> traces2 = tde.getStackTraceEvents();
+
+        assertEquals(2, traces2.size());
+        StackTraceEvent t4 = traces2.get(0);
+        assertEquals(17L, t4.getLineNumber().longValue());
+        StackTraceEvent t5 = traces2.get(1);
+        assertEquals(21L, t5.getLineNumber().longValue());
     }
 
     // Package protected -----------------------------------------------------------------------------------------------

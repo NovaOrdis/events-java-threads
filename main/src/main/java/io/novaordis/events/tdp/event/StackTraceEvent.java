@@ -18,6 +18,8 @@ package io.novaordis.events.tdp.event;
 
 import io.novaordis.events.api.event.GenericEvent;
 
+import java.util.Arrays;
+
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
  * @since 8/14/17
@@ -30,9 +32,65 @@ public class StackTraceEvent extends GenericEvent {
 
     // Attributes ------------------------------------------------------------------------------------------------------
 
+    //
+    // if null, it means the tid could not be extracted from the stack trace
+    //
+    private Long tid;
+    private boolean tidHexRepresentationStartsWith0x;
+
+    //
+    // the hex string representation (without leading 0x, if present) length
+    //
+    private int tidHexRepresentationLength;
+
     // Constructors ----------------------------------------------------------------------------------------------------
 
+    public StackTraceEvent(Long lineNumber) {
+
+        setLineNumber(lineNumber);
+    }
+
     // Public ----------------------------------------------------------------------------------------------------------
+
+    /**
+     * @return the thread ID. May return null, which means the thread ID could not be extracted from the stack trace.
+     */
+    public Long getTid() {
+
+        return tid;
+    }
+
+    /**
+     * @return the thread ID in a hexadecimal representation, similar to the one recorded in the stack trace. May
+     * return null, which means the thread ID could not be extracted from the stack trace.
+     */
+    public String getTidAsHexString() {
+
+        if (tid == null) {
+
+            return null;
+        }
+
+        String s = Long.toHexString(tid);
+
+        if (s.length() != tidHexRepresentationLength) {
+
+            //
+            // pad with leading zeroes
+            //
+
+            char[] padding = new char[tidHexRepresentationLength - s.length()];
+            Arrays.fill(padding, '0');
+            s = new String(padding) + s;
+        }
+
+        if (tidHexRepresentationStartsWith0x) {
+
+            s = "0x" + s;
+        }
+
+        return s;
+    }
 
     // Package protected -----------------------------------------------------------------------------------------------
 

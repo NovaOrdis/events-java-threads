@@ -18,6 +18,8 @@ package io.novaordis.events.tdp.event;
 
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
  * @since 8/14/17
@@ -37,9 +39,11 @@ public class StackTraceEventTest {
     // Tests -----------------------------------------------------------------------------------------------------------
 
     @Test
-    public void returnHere() throws Exception {
+    public void identity() throws Exception {
 
-        throw new RuntimeException("RETURN HERE");
+        StackTraceEvent e = new StackTraceEvent(7L);
+
+        assertEquals(7L, e.getLineNumber().longValue());
     }
 
     // Package protected -----------------------------------------------------------------------------------------------

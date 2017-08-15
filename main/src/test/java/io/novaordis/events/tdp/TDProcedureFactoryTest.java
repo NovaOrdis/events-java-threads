@@ -18,6 +18,10 @@ package io.novaordis.events.tdp;
 
 import org.junit.Test;
 
+import java.util.Collections;
+
+import static org.junit.Assert.assertNull;
+
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
  * @since 8/14/17
@@ -37,9 +41,11 @@ public class TDProcedureFactoryTest {
     // Tests -----------------------------------------------------------------------------------------------------------
 
     @Test
-    public void returnHere() throws Exception {
+    public void find_NoSuchProcedure() throws Exception {
 
-        throw new RuntimeException("RETURN HERE");
+        TDProcedureFactory f = new TDProcedureFactory();
+
+        assertNull(f.find("I-am-sure-there-is-no-such-procedure", 0, Collections.emptyList()));
     }
 
     // Package protected -----------------------------------------------------------------------------------------------

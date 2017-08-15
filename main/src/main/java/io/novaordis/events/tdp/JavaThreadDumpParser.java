@@ -116,7 +116,6 @@ public class JavaThreadDumpParser extends ParserBase {
 
             //
             // we identified a thread dump timestamp, the very next line must be a thread dump header
-            //
 
             //
             // TODO: currently we only check a single set of patterns, generalize when we need to check the second
@@ -126,34 +125,14 @@ public class JavaThreadDumpParser extends ParserBase {
 
             if (!m.find()) {
 
-                throw new RuntimeException("NYE");
+                threadDumpTimestamp = null;
+                log.warn("skipping thread dump started at line " + (lineNumber - 1) + " because thread dump header missing on line " + lineNumber + ": " + line);
             }
             else {
 
-                //
-                // the current thread dump event, if any, is finished
-                //
+                if (log.isDebugEnabled()) {
 
-                if (currentJavaThreadDumpEvent != null) {
-
-                    //
-                    // collect all leftovers from the stack trace parser, but don't close it
-                    //
-
-                    List<Event> stackTraces = stackTraceParser.flush();
-
-                    for(Event e: stackTraces) {
-
-                        StackTraceEvent ste = (StackTraceEvent)e;
-                        currentJavaThreadDumpEvent.addStackTrace(ste);
-                    }
-
-                    result = Collections.singletonList(currentJavaThreadDumpEvent);
-
-                    if (log.isDebugEnabled()) {
-
-                        log.debug("thread dump parsing complete for " + currentJavaThreadDumpEvent);
-                    }
+                    log.debug("thread dump header found, building the thread dump event ...");
                 }
 
                 //
@@ -192,26 +171,47 @@ public class JavaThreadDumpParser extends ParserBase {
             if (m.matches()) {
 
                 //
-                // we identified a new thread dump in the same file, put the thread dump parser in
-                // "expect a header line" mode ...
+                // we identified a new thread dump in the same file, put the thread dump parser in "expect a header
+                // line" mode ...
                 //
 
                 this.threadDumpTimestamp = line.trim();
 
+                if (log.isDebugEnabled()) {
+
+                    log.debug("thread dump timestamp found: " + threadDumpTimestamp);
+                }
+
+                if (currentJavaThreadDumpEvent != null) {
+
+                    //
+                    // since we established that another thread dump is starting, we are wrapping up the current thread
+                    // dump event, if any. Collect all leftovers from the stack trace parser, but don't close the stack
+                    // trace parser, we'll need it for the upcoming thread dump events
+                    //
+
+                    List<Event> stackTraces = stackTraceParser.flush();
+                    currentJavaThreadDumpEvent.addStackTraces(stackTraces);
+                    result = Collections.singletonList(currentJavaThreadDumpEvent);
+
+                    if (log.isDebugEnabled()) {
+
+                        log.debug(currentJavaThreadDumpEvent.toString() + " parsing complete");
+                    }
+
+                    currentJavaThreadDumpEvent = null;
+                }
             }
             else {
 
                 if (currentJavaThreadDumpEvent == null) {
 
                     //
-                    // we ignore this line, there's nothing we can do with it
+                    // we ignore this line, there's nothing we can do with it; normally there should be no ignored
+                    // lines in a valid thread dump file, so we make it visible and warn
                     //
 
-                    if (log.isDebugEnabled()) {
-
-                        log.debug("ignoring line " + lineNumber + ": " + line);
-
-                    }
+                    log.warn("ignoring line " + lineNumber + ": " + line);
                 }
                 else {
 
@@ -220,15 +220,7 @@ public class JavaThreadDumpParser extends ParserBase {
                     //
 
                     List<Event> stackTraces = stackTraceParser.parse(lineNumber, line);
-
-                    if (!stackTraces.isEmpty()) {
-
-                        for(Event e: stackTraces) {
-
-                            StackTraceEvent ste = (StackTraceEvent)e;
-                            currentJavaThreadDumpEvent.addStackTrace(ste);
-                        }
-                    }
+                    currentJavaThreadDumpEvent.addStackTraces(stackTraces);
                 }
             }
         }

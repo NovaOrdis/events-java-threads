@@ -121,6 +121,117 @@ public class JavaThreadDumpParserTest {
     }
 
     @Test
+    public void parse_HeaderFailsToFollowTimestamp() throws Exception {
+
+        String content =
+                "\n" +
+                        "something that should not bother the parser\n" +
+                        "2016-08-13 01:01:01\n" +
+                        "something unexpected\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.51-b03 mixed mode):\n" +
+                        "\n" +
+                        "something that does not matter\n" +
+                        "something that does not matter\n" +
+                        "2016-08-13 02:02:02\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.51-b03 mixed mode):\n" +
+                        "\n" +
+                        "\n";
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        long lineNumber = 1;
+
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close());
+
+        br.close();
+
+        //
+        // we must catch the follow up event
+        //
+
+        assertEquals(2, events.size());
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+
+        assertEquals(
+                JavaThreadDumpParser.THREAD_DUMP_TIMESTAMP_FORMATS[0].parse("2016-08-13 02:02:02").getTime(),
+                e.getTime().longValue());
+
+        assertTrue(events.get(1) instanceof EndOfStreamEvent);
+    }
+
+    @Test
+    public void parse_HeaderFailsToFollowTimestamp_AfterAValidThreadDump() throws Exception {
+
+        String content =
+                "2016-08-13 01:01:01\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.51-b03 mixed mode):\n" +
+                        "\n" +
+                        "2016-08-13 02:02:02\n" +
+                        "something unexpected\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.51-b03 mixed mode):\n" +
+                        "\n" +
+                        "something that does not matter\n" +
+                        "something that does not matter\n" +
+                        "2016-08-13 03:03:03\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.51-b03 mixed mode):\n" +
+                        "\n" +
+                        "\n";
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        long lineNumber = 1;
+
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close());
+
+        br.close();
+
+        //
+        // we must catch the follow up event
+        //
+
+        assertEquals(3, events.size());
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+
+        assertEquals(
+                JavaThreadDumpParser.THREAD_DUMP_TIMESTAMP_FORMATS[0].parse("2016-08-13 01:01:01").getTime(),
+                e.getTime().longValue());
+
+        JavaThreadDumpEvent e2 = (JavaThreadDumpEvent)events.get(1);
+
+        assertEquals(
+                JavaThreadDumpParser.THREAD_DUMP_TIMESTAMP_FORMATS[0].parse("2016-08-13 03:03:03").getTime(),
+                e2.getTime().longValue());
+
+        assertTrue(events.get(2) instanceof EndOfStreamEvent);
+    }
+
+    @Test
     public void parse_twoSyntheticThreadDumps() throws Exception {
 
         String content =
@@ -173,7 +284,6 @@ public class JavaThreadDumpParserTest {
 
         assertTrue(events.get(1) instanceof EndOfStreamEvent);
     }
-
 
     @Test
     public void parse_endToEnd() throws Exception {

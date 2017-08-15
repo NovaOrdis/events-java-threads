@@ -40,7 +40,7 @@ public class TDProcedureFactory implements ProcedureFactory {
     @Override
     public Procedure find(String commandLineLabel, int from, List<String> arguments) {
 
-        throw new RuntimeException("find() NOT YET IMPLEMENTED");
+        return null;
     }
 
     // Public ----------------------------------------------------------------------------------------------------------
