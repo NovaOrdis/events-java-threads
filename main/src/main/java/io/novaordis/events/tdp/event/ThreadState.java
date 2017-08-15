@@ -37,6 +37,8 @@ public enum ThreadState {
 
     SLEEPING("sleeping"),
 
+    WAITING_FOR_MONITOR_ENTRY("waiting for monitor entry"),
+
     ;
 
     // Static ----------------------------------------------------------------------------------------------------------

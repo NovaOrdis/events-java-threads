@@ -320,6 +320,16 @@ public class StackTraceEventTest {
         assertEquals("0x00007f013a8e8000", e.getMonitor());
     }
 
+    @Test
+    public void setThreadState_WaitingForMonitorEntry() throws Exception {
+
+        StackTraceEvent e = new StackTraceEvent(7L);
+
+        e.setThreadState("waiting for monitor entry [0x00007f013b5f4000]");
+        assertEquals(ThreadState.WAITING_FOR_MONITOR_ENTRY, e.getThreadState());
+        assertEquals("0x00007f013b5f4000", e.getMonitor());
+    }
+
     // prio ------------------------------------------------------------------------------------------------------------
 
     @Test

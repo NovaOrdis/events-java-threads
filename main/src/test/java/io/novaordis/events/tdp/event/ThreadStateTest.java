@@ -81,6 +81,13 @@ public class ThreadStateTest {
         assertEquals(ThreadState.SLEEPING, ThreadState.fromString(" sleeping[0x00007f013a8e8000]"));
     }
 
+    @Test
+    public void fromString_WaitingForMonitorEntry() throws Exception {
+
+        assertEquals(ThreadState.WAITING_FOR_MONITOR_ENTRY,
+                ThreadState.fromString(" waiting for monitor entry [0x00007f013b5f4000]"));
+    }
+
     // setMonitor() ---------------------------------------------------------------------------------------------------
 
     @Test
@@ -117,6 +124,18 @@ public class ThreadStateTest {
         ThreadState.setMonitor(e, " sleeping[0x00007f013a8e8000]");
 
         assertEquals("0x00007f013a8e8000", e.getMonitor());
+    }
+
+    @Test
+    public void setMonitor_WaitingForMonitorEntry() throws Exception {
+
+        StackTraceEvent e = new StackTraceEvent(7L);
+
+        assertNull(e.getMonitor());
+
+        ThreadState.setMonitor(e, " waiting for monitor entry [0x00007f013b5f4000]");
+
+        assertEquals("0x00007f013b5f4000", e.getMonitor());
     }
 
     // Package protected -----------------------------------------------------------------------------------------------
