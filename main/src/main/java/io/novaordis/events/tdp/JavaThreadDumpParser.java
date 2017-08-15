@@ -89,6 +89,8 @@ public class JavaThreadDumpParser extends ParserBase {
 
     private JavaThreadDumpEvent currentJavaThreadDumpEvent;
 
+    private boolean discardEmptyLine;
+
     // Constructors ----------------------------------------------------------------------------------------------------
 
     public JavaThreadDumpParser() {
@@ -109,17 +111,41 @@ public class JavaThreadDumpParser extends ParserBase {
         List<Event> result = null;
 
         //
-        // a thread dump event is marked by a consecutive succession of a timestamp and a header
+        // a thread dump event is marked by a consecutive succession of a timestamp, a header and an empty line
         //
 
-        if (threadDumpTimestamp != null) {
+        if (discardEmptyLine) {
 
             //
-            // we identified a thread dump timestamp, the very next line must be a thread dump header
+            // the previous line was a thread dump header and we expect this line to be empty
+            //
+
+            discardEmptyLine = false;
+
+            if (line.trim().isEmpty()) {
+
+                if (log.isDebugEnabled()) {
+
+                    log.debug("discarded empty line " + lineNumber);
+                }
+            }
+            else {
+
+                //
+                // we are expecting an empty line and we got a non-empty line, the format of the thread dump is
+                // invalid, drop the current thread dump event and warn through the rest of the lines associated
+                // with this thread dump event
+                //
+
+                log.warn("line " + lineNumber + " is invalid: expecting an empty line that follows a thread dump header but got: " + line);
+                currentJavaThreadDumpEvent = null;
+            }
+
+        }
+        else if (threadDumpTimestamp != null) {
 
             //
-            // TODO: currently we only check a single set of patterns, generalize when we need to check the second
-            //
+            // we identified a thread dump timestamp on the previous line, this line must be a thread dump header
 
             Matcher m = THREAD_DUMP_HEADER_PATTERNS[0].matcher(line);
 
@@ -158,6 +184,7 @@ public class JavaThreadDumpParser extends ParserBase {
 
                 threadDumpTimestamp = null;
                 currentJavaThreadDumpEvent = new JavaThreadDumpEvent(lineNumber, timestamp);
+                discardEmptyLine = true;
             }
         }
         else {

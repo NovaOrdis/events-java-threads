@@ -18,7 +18,10 @@ package io.novaordis.events.tdp;
 
 import io.novaordis.events.api.event.EndOfStreamEvent;
 import io.novaordis.events.api.event.Event;
+import io.novaordis.events.api.event.EventProperty;
+import io.novaordis.events.api.event.Property;
 import io.novaordis.events.tdp.event.JavaThreadDumpEvent;
+import io.novaordis.events.tdp.event.StackTraceEvent;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -75,14 +78,15 @@ public class JavaThreadDumpParserTest {
     @Test
     public void parse_simplestSyntheticThreadDump() throws Exception {
 
-        String content =
-                "\n" +
-                        "something that should not bother the parser\n" +
-                        "2016-08-13 17:42:10\n" +
-                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.51-b03 mixed mode):\n" +
-                        "\n" +
-                        "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n" +
-                        "\n";
+        String line1 = "\n";
+        String line2 = "something that should not bother the parser\n";
+        String line3 = "2016-08-13 17:42:10\n";
+        String line4 = "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.51-b03 mixed mode):\n";
+        String line5 = "\n";
+        String line6 = "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n";
+        String line7 = "\n";
+
+        String content = line1 + line2 + line3 + line4 + line5 + line6 + line7;
 
         JavaThreadDumpParser p = new JavaThreadDumpParser();
 
@@ -230,6 +234,67 @@ public class JavaThreadDumpParserTest {
                 e2.getTime().longValue());
 
         assertTrue(events.get(2) instanceof EndOfStreamEvent);
+    }
+
+    @Test
+    public void parse_EmptyLineExpectedAfterHeaderButNonEmptyLineArrives() throws Exception {
+
+        String line1 = "2016-08-13 01:01:01\n";
+        String line2 = "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.51-b03 mixed mode):\n";
+        String line3 = "SYNTHETIC NON-EMPTY LINE\n";
+        String line4 = "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n";
+        String line5 = "\n";
+        String line6 = "this will be discarded as well\n";
+        String line7 = "2016-08-13 02:02:02\n";
+        String line8 = "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.51-b03 mixed mode):\n";
+        String line9 = "\n";
+        String line10 = "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n";
+        String line11 = "\n";
+
+        String content = line1 + line2 + line3 + line4 + line5 + line6 + line7 + line8 + line9 + line10 + line11;
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        long lineNumber = 1;
+
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        //
+        // since it is the only event, it should not show up here, but on close()
+        //
+
+        assertTrue(events.isEmpty());
+
+        events = p.close();
+
+        br.close();
+
+        assertEquals(2, events.size());
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+
+        assertEquals(
+                JavaThreadDumpParser.THREAD_DUMP_TIMESTAMP_FORMATS[0].parse("2016-08-13 02:02:02").getTime(),
+                e.getTime().longValue());
+
+        assertTrue(events.get(1) instanceof EndOfStreamEvent);
+
+        List<Property> eventProperties = e.getProperties(Event.class);
+        assertEquals(1, eventProperties.size());
+        EventProperty ep = (EventProperty)eventProperties.get(0);
+        StackTraceEvent e2 = (StackTraceEvent)ep.getEvent();
+
+        assertEquals("GC task thread#0 (ParallelGC)", e2.getThreadName());
     }
 
     @Test
