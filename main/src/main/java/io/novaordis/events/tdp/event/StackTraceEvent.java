@@ -16,9 +16,12 @@
 
 package io.novaordis.events.tdp.event;
 
+import io.novaordis.events.api.event.BooleanProperty;
 import io.novaordis.events.api.event.GenericEvent;
 import io.novaordis.events.api.event.IntegerProperty;
 import io.novaordis.events.api.event.StringProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
@@ -28,8 +31,11 @@ public class StackTraceEvent extends GenericEvent {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
+    private static final Logger log = LoggerFactory.getLogger(StackTraceEvent.class);
+
     public static final String THREAD_NAME_PROPERTY_NAME = "thread-name";
     public static final String OS_PRIO_PROPERTY_NAME = "os-prio";
+    public static final String PRIO_PROPERTY_NAME = "prio";
 
     // the TID is maintained internally as a hexadecimal string
     public static final String TID_PROPERTY_NAME = "tid";
@@ -38,6 +44,13 @@ public class StackTraceEvent extends GenericEvent {
     public static final String NID_PROPERTY_NAME = "nid";
 
     public static final String THREAD_STATE_PROPERTY_NAME = "thread-state";
+
+    public static final String DAEMON_PROPERTY_NAME = "daemon";
+
+    //
+    // if the thread is in "Object.wait()" state, this property may carry the monitor the thread is waiting on.
+    //
+    public static final String OBJECT_WAIT_MONITOR_PROPERTY_NAME = "object-wait-monitor";
 
     // Static ----------------------------------------------------------------------------------------------------------
 
@@ -92,6 +105,11 @@ public class StackTraceEvent extends GenericEvent {
 
     public void setThreadName(String s) {
 
+        if (log.isDebugEnabled()) {
+
+            log.debug(this + " setting " + THREAD_NAME_PROPERTY_NAME + " to " + s);
+        }
+
         setStringProperty(THREAD_NAME_PROPERTY_NAME, s);
     }
 
@@ -109,7 +127,34 @@ public class StackTraceEvent extends GenericEvent {
 
     public void setOsPrio(int i) {
 
+        if (log.isDebugEnabled()) {
+
+            log.debug(this + " setting " + OS_PRIO_PROPERTY_NAME + " to " + i);
+        }
+
         setIntegerProperty(OS_PRIO_PROPERTY_NAME, i);
+    }
+
+    public Integer getPrio() {
+
+        IntegerProperty p =  getIntegerProperty(PRIO_PROPERTY_NAME);
+
+        if (p == null) {
+
+            return null;
+        }
+
+        return p.getInteger();
+    }
+
+    public void setPrio(int i) {
+
+        if (log.isDebugEnabled()) {
+
+            log.debug(this + " setting " + PRIO_PROPERTY_NAME + " to " + i);
+        }
+
+        setIntegerProperty(PRIO_PROPERTY_NAME, i);
     }
 
     /**
@@ -121,6 +166,11 @@ public class StackTraceEvent extends GenericEvent {
         // sanity check - if it does not throw exception, we're good
         //
         longFromHexString(hexadecimalString);
+
+        if (log.isDebugEnabled()) {
+
+            log.debug(this + " setting " + TID_PROPERTY_NAME + " to " + hexadecimalString);
+        }
 
         setStringProperty(TID_PROPERTY_NAME, hexadecimalString);
     }
@@ -166,6 +216,11 @@ public class StackTraceEvent extends GenericEvent {
         //
         intFromHexString(hexadecimalString);
 
+        if (log.isDebugEnabled()) {
+
+            log.debug(this + " setting " + NID_PROPERTY_NAME + " to " + hexadecimalString);
+        }
+
         setStringProperty(NID_PROPERTY_NAME, hexadecimalString);
     }
 
@@ -201,19 +256,41 @@ public class StackTraceEvent extends GenericEvent {
     }
 
     /**
+     * The method updates the event with details extracted from the state string.
+     *
+     * @param threadStateRepresentation a string representing the thread state, as reflected by the stack trace. May
+     *                                  be one of the following: "runnable", "in Object.wait() [0x00007f6209147000]",
+     *                                  etc.
+     *
      * @throws IllegalArgumentException if the thread state string cannot be converted to a known ThreadState
      */
-    public void setThreadState(String s) throws IllegalArgumentException {
+    public void setThreadState(String threadStateRepresentation) throws IllegalArgumentException {
 
-        ThreadState ts = ThreadState.fromString(s);
+        threadStateRepresentation = threadStateRepresentation.trim();
+
+        ThreadState ts = ThreadState.fromString(threadStateRepresentation);
 
         if (ts == null) {
 
-            throw new IllegalArgumentException("unknown thread state: " + s);
+            throw new IllegalArgumentException("unknown thread state: " + threadStateRepresentation);
         }
         else {
 
+            if (log.isDebugEnabled()) {
+
+                log.debug(this + " setting " + THREAD_STATE_PROPERTY_NAME + " to " + ts);
+            }
+
             setStringProperty(THREAD_STATE_PROPERTY_NAME, ts.toString());
+
+            //
+            // additional configuration for certain states
+            //
+
+            if (ThreadState.OBJECT_WAIT.equals(ts)) {
+
+                ThreadState.setMonitor(this, threadStateRepresentation);
+            }
         }
     }
 
@@ -244,6 +321,58 @@ public class StackTraceEvent extends GenericEvent {
         }
 
         return ts;
+    }
+
+    public void setDaemon(boolean isDaemon) {
+
+        if (isDaemon) {
+
+            setBooleanProperty(DAEMON_PROPERTY_NAME, true);
+        }
+        else {
+
+            removeBooleanProperty(DAEMON_PROPERTY_NAME);
+        }
+    }
+
+    public boolean isDaemon() {
+
+        BooleanProperty p = getBooleanProperty(DAEMON_PROPERTY_NAME);
+
+        if (p == null) {
+
+            return false;
+        }
+
+        Boolean b = p.getBoolean();
+
+        if (b == null) {
+
+            return false;
+        }
+
+        return b;
+    }
+
+    /**
+     * If the thread is in ThreadState.OBJECT_WAIT state, this method returns the monitor the thread is waiting on,
+     * if available. May return null.
+     */
+    public String getMonitor() {
+
+        StringProperty p = getStringProperty(OBJECT_WAIT_MONITOR_PROPERTY_NAME);
+
+        if (p == null) {
+
+            return null;
+        }
+
+        return p.getString();
+    }
+
+    public void setObjectWaitMonitor(String s) {
+
+        setStringProperty(OBJECT_WAIT_MONITOR_PROPERTY_NAME, s);
     }
 
     @Override

@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.Currency;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,7 +37,7 @@ public class StackTraceParser extends ParserBase {
     // Constants -------------------------------------------------------------------------------------------------------
 
     public static final Pattern STACK_TRACE_HEADER_PATTERN = Pattern.compile(
-            "^\"(.+)\" os_prio=(\\d) tid=(0x[0-9a-fA-F]+) nid=(0x\\d+) (.+)");
+            "^\"(.+)\"(.+) tid=(0[xX][0-9a-fA-F]+)( .*$)");
 
     private static final Logger log = LoggerFactory.getLogger(StackTraceParser.class);
 
@@ -103,33 +102,30 @@ public class StackTraceParser extends ParserBase {
 
             currentStackTrace = new StackTraceEvent(lineNumber);
 
-            String threadName = m.group(1);
-            currentStackTrace.setThreadName(threadName);
-
-            String osPrios = m.group(2);
-            int osPrio;
+            //
+            // we process all expected fields in a long try/catch, and any exception at this stage gets the whole
+            // thread stack discarded, and a warning message sent to log
+            //
 
             try {
 
-                osPrio = Integer.parseInt(osPrios);
+                processStackTraceHeader(currentStackTrace, m.group(1), m.group(3), m.group(2), m.group(4));
             }
             catch(Exception e) {
 
-                log.warn("");
-
+                log.warn("line " + lineNumber + ": " + e.getMessage());
                 log.debug("current stack trace event " + currentStackTrace + " is being discarded");
                 currentStackTrace = null;
                 return EMPTY_LIST;
             }
-
-            currentStackTrace.setOsPrio(osPrio);
-
-            String tid = m.group(3);
-            String nid = m.group(4);
         }
         else {
 
+            //
+            // the line did not match the header pattern
+            //
 
+            log.warn("line " + lineNumber + " does not match the thread stack header pattern, discarding: " + line);
         }
 
         if (result == null) {
@@ -159,6 +155,92 @@ public class StackTraceParser extends ParserBase {
     }
 
     // Package protected -----------------------------------------------------------------------------------------------
+
+    // Static package protected ----------------------------------------------------------------------------------------
+
+    /**
+     * @param e the StackTraceEvent instance that is being updated.
+     *
+     * @param threadName the thread name identified by the regular expression.
+     * @param tid the TID identified by the regular expression.
+     * @param fragment the header fragment between the header name and TID.
+     * @param fragment2 the header fragment that comes after the TID.
+     *
+     * @throws Exception
+     */
+    static void processStackTraceHeader(
+            StackTraceEvent e, String threadName, String tid, String fragment, String fragment2)
+            throws Exception {
+
+
+        e.setThreadName(threadName);
+        e.setTid(tid);
+
+        int i;
+
+        if (fragment.contains("daemon")) {
+
+            e.setDaemon(true);
+        }
+
+        //
+        // prio
+        //
+
+        if (fragment.startsWith("prio=")) {
+
+            i = 0;
+        }
+        else {
+
+            i = fragment.indexOf(" prio=");
+        }
+
+        if (i != -1) {
+
+            String prios = fragment.substring(i + " prio=".length());
+            i = prios.indexOf(' ');
+            if (i == -1) {
+                i = prios.length();
+            }
+            e.setPrio(Integer.parseInt(prios.substring(0, i)));
+        }
+
+        //
+        // os-prio
+        //
+
+        i = fragment.indexOf("os_prio=");
+
+        if (i != -1) {
+
+            String osPrios = fragment.substring(i + "os_prio=".length());
+            i = osPrios.indexOf(' ');
+            if (i == -1) {
+                i = osPrios.length();
+            }
+            e.setOsPrio(Integer.parseInt(osPrios.substring(0, i)));
+        }
+
+        //
+        // nid
+        //
+
+        i = fragment2.indexOf("nid=");
+        int j = 0;
+
+        if (i != -1) {
+
+            j = fragment2.indexOf(' ', i + "nid=".length());
+            e.setNid(fragment2.substring(i + "nid=".length(), j));
+        }
+
+        //
+        // thread state
+        //
+
+        e.setThreadState(fragment2.substring(j));
+    }
 
     // Protected -------------------------------------------------------------------------------------------------------
 

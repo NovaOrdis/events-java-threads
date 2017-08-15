@@ -18,6 +18,11 @@ package io.novaordis.events.tdp.cli;
 
 import org.junit.Test;
 
+import java.io.File;
+import java.util.Arrays;
+
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
  * @since 8/14/17
@@ -39,8 +44,10 @@ public class MainTest {
     @Test
     public void endToEnd() throws Exception {
 
-        throw new RuntimeException("RETURN HERE");
+        File f = new File(System.getProperty("basedir"), "src/test/resources/samples/015_successive_thread_dumps.txt");
+        assertTrue(f.isFile());
 
+        Main.main(new String[] {f.getPath()});
     }
 
     // Package protected -----------------------------------------------------------------------------------------------

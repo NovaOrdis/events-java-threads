@@ -211,7 +211,7 @@ public class JavaThreadDumpParser extends ParserBase {
                     // lines in a valid thread dump file, so we make it visible and warn
                     //
 
-                    log.warn("ignoring line " + lineNumber + ": " + line);
+                    log.warn("discarding line " + lineNumber + ": " + line);
                 }
                 else {
 

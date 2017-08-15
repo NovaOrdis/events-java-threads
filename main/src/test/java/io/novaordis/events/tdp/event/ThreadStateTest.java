@@ -48,9 +48,57 @@ public class ThreadStateTest {
     }
 
     @Test
-    public void fromString_RUNNABLE() throws Exception {
+    public void fromString_AllEnumElementsCanBeReconstitutedFromTheirToString() throws Exception {
+
+        for(ThreadState ts: ThreadState.values()) {
+
+            String s = ts.toString();
+            assertEquals(ts, ThreadState.fromString(s));
+        }
+    }
+
+    @Test
+    public void fromString_Runnable() throws Exception {
 
         assertEquals(ThreadState.RUNNABLE, ThreadState.fromString("runnable"));
+    }
+
+    @Test
+    public void fromString_InObjectWait() throws Exception {
+
+        assertEquals(ThreadState.OBJECT_WAIT, ThreadState.fromString(" in Object.wait() [0x00007f6209147000]"));
+    }
+
+    @Test
+    public void fromString_WaitingOnCondition() throws Exception {
+
+        assertEquals(ThreadState.WAITING_ON_CONDITION, ThreadState.fromString(" waiting on condition [0x00007f0109264000]"));
+    }
+
+    // setMonitor() ---------------------------------------------------------------------------------------------------
+
+    @Test
+    public void setMonitor_ObjectWait() throws Exception {
+
+        StackTraceEvent e = new StackTraceEvent(7L);
+
+        assertNull(e.getMonitor());
+
+        ThreadState.setMonitor(e, " in Object.wait() [0x00007f6209147000]");
+
+        assertEquals("0x00007f6209147000", e.getMonitor());
+    }
+
+    @Test
+    public void setMonitor_WaitingOnCondition() throws Exception {
+
+        StackTraceEvent e = new StackTraceEvent(7L);
+
+        assertNull(e.getMonitor());
+
+        ThreadState.setMonitor(e, " waiting on condition [0x00007f0109264000]");
+
+        assertEquals("0x00007f0109264000", e.getMonitor());
     }
 
     // Package protected -----------------------------------------------------------------------------------------------

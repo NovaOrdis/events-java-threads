@@ -24,20 +24,39 @@ public enum ThreadState {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
-    RUNNABLE,
+    RUNNABLE("runnable"),
+
+    //
+    // if a thread is " in Object.wait() [0x00007f6209147000]", the monitor it is waiting on will may be available
+    // as the value of the object-wait-monitor property.
+    //
+
+    OBJECT_WAIT("in Object.wait()"),
+
+    WAITING_ON_CONDITION("waiting on condition"),
 
     ;
 
     // Static ----------------------------------------------------------------------------------------------------------
 
     /**
+     * Recognizes a thread state representation in a string and builds the corresponding instance. It is guaranteed
+     * to work with the literals and also with the toString() values.
+     *
      * @return null if no known thread state is identified
      */
     static ThreadState fromString(String s) {
 
         for(ThreadState ts: values()) {
 
-            if (ts.toString().equalsIgnoreCase(s)) {
+            String literal = ts.getLiteral();
+
+            if (s.contains(literal)) {
+
+                return ts;
+            }
+
+            if (ts.toString().equals(s)) {
 
                 return ts;
             }
@@ -46,6 +65,45 @@ public enum ThreadState {
         return null;
     }
 
+    static void setMonitor(StackTraceEvent e, String threadStateRepresentation) {
+
+        if (threadStateRepresentation == null) {
+
+            return;
+        }
+
+        int i = threadStateRepresentation.indexOf('[');
+
+        if (i != -1) {
+
+            int j = threadStateRepresentation.indexOf(']', i);
+
+            if (j != -1) {
+
+                e.setObjectWaitMonitor(threadStateRepresentation.substring(i + 1, j));
+            }
+        }
+    }
+
+    // Attributes ------------------------------------------------------------------------------------------------------
+
+    private String literal;
+
+    // Constructors ----------------------------------------------------------------------------------------------------
+
+    ThreadState(String literal) {
+
+        this.literal = literal;
+    }
+
     // Public ----------------------------------------------------------------------------------------------------------
+
+    /**
+     * The string representation of the state in thread dumps.
+     */
+    public String getLiteral() {
+
+        return literal;
+    }
 
 }

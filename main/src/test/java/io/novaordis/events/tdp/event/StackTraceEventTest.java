@@ -19,6 +19,7 @@ package io.novaordis.events.tdp.event;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -243,7 +244,7 @@ public class StackTraceEventTest {
     // thread state ----------------------------------------------------------------------------------------------------
 
     @Test
-    public void threadState() throws Exception {
+    public void threadState_Runnable() throws Exception {
 
         StackTraceEvent e = new StackTraceEvent(7L);
 
@@ -262,7 +263,6 @@ public class StackTraceEventTest {
         StackTraceEvent e = new StackTraceEvent(7L);
 
         assertNull(e.getThreadState());
-
 
         try {
             e.setThreadState("something that does not make any sense");
@@ -298,6 +298,48 @@ public class StackTraceEventTest {
             assertTrue(msg.contains("invalid stored thread state"));
             assertTrue(msg.contains("something"));
         }
+    }
+
+    @Test
+    public void setThreadState_InObjectWait() throws Exception {
+
+        StackTraceEvent e = new StackTraceEvent(7L);
+
+        e.setThreadState(" in Object.wait() [0x00007f6209147000]");
+        assertEquals(ThreadState.OBJECT_WAIT, e.getThreadState());
+        assertEquals("0x00007f6209147000", e.getMonitor());
+    }
+
+    // prio ------------------------------------------------------------------------------------------------------------
+
+    @Test
+    public void prio() throws Exception {
+
+        StackTraceEvent e = new StackTraceEvent(7L);
+
+        assertNull(e.getPrio());
+
+        e.setPrio(1);
+
+        assertEquals(1, e.getPrio().intValue());
+    }
+
+    // daemon ----------------------------------------------------------------------------------------------------------
+
+    @Test
+    public void daemon() throws Exception {
+
+        StackTraceEvent e = new StackTraceEvent(7L);
+
+        assertFalse(e.isDaemon());
+
+        e.setDaemon(false);
+
+        assertFalse(e.isDaemon());
+
+        e.setDaemon(true);
+
+        assertTrue(e.isDaemon());
     }
 
     // Package protected -----------------------------------------------------------------------------------------------
