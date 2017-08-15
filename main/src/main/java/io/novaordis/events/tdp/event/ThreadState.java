@@ -35,6 +35,8 @@ public enum ThreadState {
 
     WAITING_ON_CONDITION("waiting on condition"),
 
+    SLEEPING("sleeping"),
+
     ;
 
     // Static ----------------------------------------------------------------------------------------------------------

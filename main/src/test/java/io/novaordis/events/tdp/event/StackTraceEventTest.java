@@ -310,6 +310,16 @@ public class StackTraceEventTest {
         assertEquals("0x00007f6209147000", e.getMonitor());
     }
 
+    @Test
+    public void setThreadState_Sleeping() throws Exception {
+
+        StackTraceEvent e = new StackTraceEvent(7L);
+
+        e.setThreadState(" sleeping[0x00007f013a8e8000]");
+        assertEquals(ThreadState.SLEEPING, e.getThreadState());
+        assertEquals("0x00007f013a8e8000", e.getMonitor());
+    }
+
     // prio ------------------------------------------------------------------------------------------------------------
 
     @Test

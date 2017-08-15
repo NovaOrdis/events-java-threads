@@ -75,6 +75,12 @@ public class ThreadStateTest {
         assertEquals(ThreadState.WAITING_ON_CONDITION, ThreadState.fromString(" waiting on condition [0x00007f0109264000]"));
     }
 
+    @Test
+    public void fromString_Sleeping() throws Exception {
+
+        assertEquals(ThreadState.SLEEPING, ThreadState.fromString(" sleeping[0x00007f013a8e8000]"));
+    }
+
     // setMonitor() ---------------------------------------------------------------------------------------------------
 
     @Test
@@ -99,6 +105,18 @@ public class ThreadStateTest {
         ThreadState.setMonitor(e, " waiting on condition [0x00007f0109264000]");
 
         assertEquals("0x00007f0109264000", e.getMonitor());
+    }
+
+    @Test
+    public void setMonitor_Sleeping() throws Exception {
+
+        StackTraceEvent e = new StackTraceEvent(7L);
+
+        assertNull(e.getMonitor());
+
+        ThreadState.setMonitor(e, " sleeping[0x00007f013a8e8000]");
+
+        assertEquals("0x00007f013a8e8000", e.getMonitor());
     }
 
     // Package protected -----------------------------------------------------------------------------------------------

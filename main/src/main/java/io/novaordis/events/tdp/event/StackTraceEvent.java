@@ -282,15 +282,7 @@ public class StackTraceEvent extends GenericEvent {
             }
 
             setStringProperty(THREAD_STATE_PROPERTY_NAME, ts.toString());
-
-            //
-            // additional configuration for certain states
-            //
-
-            if (ThreadState.OBJECT_WAIT.equals(ts)) {
-
-                ThreadState.setMonitor(this, threadStateRepresentation);
-            }
+            ThreadState.setMonitor(this, threadStateRepresentation);
         }
     }
 
