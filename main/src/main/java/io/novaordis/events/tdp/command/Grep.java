@@ -3,7 +3,6 @@ package io.novaordis.events.tdp.command;
 import io.novaordis.events.tdp.Command;
 import io.novaordis.events.tdp.SimplifiedLogger;
 import io.novaordis.events.tdp.ThreadDump;
-import io.novaordis.events.tdp.StackTrace;
 import io.novaordis.events.tdp.ThreadDumpFile;
 import io.novaordis.utilities.UserErrorException;
 
@@ -92,49 +91,49 @@ public class Grep implements Command {
 
         int cnt = 0;
 
-        for(Iterator<ThreadDump> i = threadDumpFile.iterator(); i.hasNext(); ) {
-
-            ThreadDump td = i.next();
-
-            for(Iterator<StackTrace> j = td.iterator(); j.hasNext(); ) {
-
-                StackTrace d = j.next();
-
-                if (d.matches(regex)) {
-
-                    if (!exclude) {
-
-                        if (count) {
-
-                            cnt ++;
-                        }
-                        else
-                        {
-                            log.info(d.getOriginal());
-                        }
-                    }
-                }
-                else
-                {
-                    if (exclude)
-                    {
-                        if (count)
-                        {
-                            cnt ++;
-                        }
-                        else
-                        {
-                            log.info(d.getOriginal());
-                        }
-                    }
-                }
-            }
-        }
-
-        if (count)
-        {
-            log.info("" + cnt);
-        }
+//        for(Iterator<ThreadDump> i = threadDumpFile.iterator(); i.hasNext(); ) {
+//
+//            ThreadDump td = i.next();
+//
+//            for(Iterator<StackTrace> j = td.iterator(); j.hasNext(); ) {
+//
+//                StackTrace d = j.next();
+//
+//                if (d.matches(regex)) {
+//
+//                    if (!exclude) {
+//
+//                        if (count) {
+//
+//                            cnt ++;
+//                        }
+//                        else
+//                        {
+//                            log.info(d.getOriginal());
+//                        }
+//                    }
+//                }
+//                else
+//                {
+//                    if (exclude)
+//                    {
+//                        if (count)
+//                        {
+//                            cnt ++;
+//                        }
+//                        else
+//                        {
+//                            log.info(d.getOriginal());
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        if (count)
+//        {
+//            log.info("" + cnt);
+//        }
     }
 
     // Public ----------------------------------------------------------------------------------------------------------

@@ -31,6 +31,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
+ * An individual thread dump, containing the snapshots of all threads in the JVM at a certain moment in time. A log
+ * file (or a stdout dump file) may contain multiple thread dumps, so it may have associated multiple
+ * JavaThreadDumpEvent instances.
+ *
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
  * @since 8/14/17
  */

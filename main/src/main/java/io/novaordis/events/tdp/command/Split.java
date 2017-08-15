@@ -96,25 +96,25 @@ public class Split implements Command {
 
     private void split(ThreadDumpFile f) throws Exception {
 
-        if (f.getCount() == 1) {
-
-            log.info("one thread dump in file, nothing to split");
-            return;
-        }
-
-        int counter = 0;
-
-        for(Iterator<ThreadDump> i = f.iterator(); i.hasNext(); ) {
-
-            ThreadDump td = i.next();
-
-            Date timestamp = td.getTimestamp();
-
-            File splitFile = generateSplitFile(counter ++, timestamp, f.getFile());
-
-            log.info("writing " + splitFile.getName());
-            td.toFile(splitFile);
-        }
+//        if (f.getCount() == 1) {
+//
+//            log.info("one thread dump in file, nothing to split");
+//            return;
+//        }
+//
+//        int counter = 0;
+//
+//        for(Iterator<ThreadDump> i = f.iterator(); i.hasNext(); ) {
+//
+//            ThreadDump td = i.next();
+//
+//            Date timestamp = td.getTimestamp();
+//
+//            File splitFile = generateSplitFile(counter ++, timestamp, f.getFile());
+//
+//            log.info("writing " + splitFile.getName());
+//            td.toFile(splitFile);
+//        }
     }
 
     /**

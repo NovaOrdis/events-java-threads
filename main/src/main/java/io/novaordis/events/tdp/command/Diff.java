@@ -18,7 +18,6 @@ package io.novaordis.events.tdp.command;
 
 import io.novaordis.events.tdp.Command;
 import io.novaordis.events.tdp.SimplifiedLogger;
-import io.novaordis.events.tdp.StackTrace;
 import io.novaordis.events.tdp.ThreadDump;
 import io.novaordis.events.tdp.ThreadDumpFile;
 import io.novaordis.utilities.UserErrorException;
@@ -129,66 +128,66 @@ public class Diff implements Command {
 
     public void run() throws Exception {
 
-        List<Long> tids = new ArrayList<>();
-        List<Long> tids2 = new ArrayList<>();
-
-        //
-        // the constructor did take care already that we only have a thread dump per file
-        //
-
-        ThreadDump td = tdFile.iterator().next();
-        ThreadDump td2 = tdFile2.iterator().next();
-
-        for(Iterator<StackTrace> i = td.iterator(); i.hasNext(); ) {
-
-            StackTrace st = i.next();
-            Long tid = st.getTid();
-            if (tid == null) {
-
-                throw new UserErrorException("could not extract tid");
-            }
-            tids.add(tid);
-        }
-
-        for(Iterator<StackTrace> i = td2.iterator(); i.hasNext(); ) {
-
-            StackTrace st = i.next();
-            Long tid = st.getTid();
-            if (tid == null) {
-
-                throw new UserErrorException("could not extract tid");
-            }
-            tids2.add(tid);
-        }
-
-        List<Long> onlyInFirst = onlyInFirst(tids, tids2);
-        List<Long> onlyInSecond = onlyInFirst(tids2, tids);
-
-        if (!onlyInFirst.isEmpty()) {
-
-            log.info("only in " + file + ":");
-
-            for(Long tid: onlyInFirst) {
-
-                String name = td.getName(tid);
-                log.info("  " + tid + ": " + name);
-            }
-
-            log.info("");
-        }
-
-        if (!onlyInSecond.isEmpty()) {
-
-            log.info("only in " + file2 + ":");
-
-            for(Long tid : onlyInSecond) {
-
-                String name = td2.getName(tid);
-                log.info("  " + tid + ": " + name);
-            }
-
-            log.info("");
-        }
+//        List<Long> tids = new ArrayList<>();
+//        List<Long> tids2 = new ArrayList<>();
+//
+//        //
+//        // the constructor did take care already that we only have a thread dump per file
+//        //
+//
+//        ThreadDump td = tdFile.iterator().next();
+//        ThreadDump td2 = tdFile2.iterator().next();
+//
+//        for(Iterator<StackTrace> i = td.iterator(); i.hasNext(); ) {
+//
+//            StackTrace st = i.next();
+//            Long tid = st.getTid();
+//            if (tid == null) {
+//
+//                throw new UserErrorException("could not extract tid");
+//            }
+//            tids.add(tid);
+//        }
+//
+//        for(Iterator<StackTrace> i = td2.iterator(); i.hasNext(); ) {
+//
+//            StackTrace st = i.next();
+//            Long tid = st.getTid();
+//            if (tid == null) {
+//
+//                throw new UserErrorException("could not extract tid");
+//            }
+//            tids2.add(tid);
+//        }
+//
+//        List<Long> onlyInFirst = onlyInFirst(tids, tids2);
+//        List<Long> onlyInSecond = onlyInFirst(tids2, tids);
+//
+//        if (!onlyInFirst.isEmpty()) {
+//
+//            log.info("only in " + file + ":");
+//
+//            for(Long tid: onlyInFirst) {
+//
+//                String name = td.getName(tid);
+//                log.info("  " + tid + ": " + name);
+//            }
+//
+//            log.info("");
+//        }
+//
+//        if (!onlyInSecond.isEmpty()) {
+//
+//            log.info("only in " + file2 + ":");
+//
+//            for(Long tid : onlyInSecond) {
+//
+//                String name = td2.getName(tid);
+//                log.info("  " + tid + ": " + name);
+//            }
+//
+//            log.info("");
+//        }
     }
 
     // Public ----------------------------------------------------------------------------------------------------------
