@@ -122,10 +122,21 @@ public class StackTraceParser extends ParserBase {
         else {
 
             //
-            // the line did not match the header pattern
+            // the line did not match the header pattern; for the time being, accumulate it to raw representation of
+            // the thread stack
             //
 
-            log.warn("line " + lineNumber + " does not match the thread stack header pattern, discarding: " + line);
+            if (currentStackTrace != null) {
+
+                if (log.isDebugEnabled()) {
+
+                    log.debug("adding line " + lineNumber + " to the raw representation of " + currentStackTrace);
+                }
+            }
+            else {
+
+                log.warn("line " + lineNumber + " will be discarded: " + line);
+            }
         }
 
         if (result == null) {
