@@ -81,7 +81,8 @@ public class JavaThreadDumpParserTest {
                         "2016-08-13 17:42:10\n" +
                         "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.51-b03 mixed mode):\n" +
                         "\n" +
-                        "";
+                        "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n" +
+                        "\n";
 
         JavaThreadDumpParser p = new JavaThreadDumpParser();
 

@@ -16,7 +16,9 @@
 
 package io.novaordis.events.tdp;
 
+import io.novaordis.events.api.event.EndOfStreamEvent;
 import io.novaordis.events.api.event.Event;
+import io.novaordis.events.tdp.event.StackTraceEvent;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -26,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
@@ -45,16 +48,14 @@ public class StackTraceParserTest {
 
     // Tests -----------------------------------------------------------------------------------------------------------
 
+    // parse() ---------------------------------------------------------------------------------------------------------
+
     @Test
-    public void simplestSyntheticStackTrace() throws Exception {
+    public void parse_simplestSyntheticStackTrace() throws Exception {
 
         String content =
-                "\n" +
-                        "something that should not bother the parser\n" +
-                        "2016-08-13 17:42:10\n" +
-                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.51-b03 mixed mode):\n" +
-                        "\n" +
-                        "";
+                "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n" +
+                        "\n";
 
         StackTraceParser p = new StackTraceParser();
 
@@ -79,6 +80,119 @@ public class StackTraceParserTest {
 
         assertEquals(1, events.size());
 
+        StackTraceEvent e = (StackTraceEvent)events.get(0);
+
+        assertEquals("GC task thread#0 (ParallelGC)", e.getThreadName());
+        assertEquals(0, e.getOsPrio().intValue());
+        assertEquals(1, e.getTidAsLong().longValue());
+        assertEquals("0x00007f6220025000", e.getTid());
+        assertEquals(1, e.getNidAsInt().longValue());
+    }
+
+    /**
+     * This test applies to any parsing failure in the header line.
+     */
+    @Test
+    public void parse_OsPrioInvalid_TheWholeTraceWillBeSkippedButNextOneWillBeCollected_FirstTrace() throws Exception {
+
+        String content =
+                "\"GC task thread#0 (ParallelGC)\" os_prio=? tid=0x00007f6220025000 nid=0x1829 runnable\n" +
+                "\n" +
+                "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0x00007f6220026800 nid=0x182a runnable\n" +
+                "\n";
+
+        StackTraceParser p = new StackTraceParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        long lineNumber = 1;
+
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        List<Event> es = p.flush();
+        events.addAll(es);
+
+        br.close();
+
+        assertEquals(1, events.size());
+
+        StackTraceEvent e = (StackTraceEvent)events.get(0);
+
+        assertEquals("GC task thread#1 (ParallelGC)", e.getThreadName());
+    }
+
+    /**
+     * This test applies to any parsing failure in the header line.
+     */
+    @Test
+    public void parse_OsPrioInvalid_TheWholeTraceWillBeSkippedButNextOneWillBeCollected_NotFirstTrace() throws Exception {
+
+        String content =
+                "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n" +
+                        "\n" +
+                        "\"GC task thread#1 (ParallelGC)\" os_prio=? tid=0x00007f6220026800 nid=0x182a runnable\n" +
+                        "\n" +
+                        "\"GC task thread#2 (ParallelGC)\" os_prio=0 tid=0x00007f6220028800 nid=0x182b runnable\n" +
+                        "\n";
+
+        StackTraceParser p = new StackTraceParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        long lineNumber = 1;
+
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        List<Event> es = p.flush();
+        events.addAll(es);
+
+        br.close();
+
+        assertEquals(2, events.size());
+
+        StackTraceEvent e = (StackTraceEvent)events.get(0);
+
+        assertEquals("GC task thread#0 (ParallelGC)", e.getThreadName());
+
+        StackTraceEvent e2 = (StackTraceEvent)events.get(1);
+
+        assertEquals("GC task thread#2 (ParallelGC)", e.getThreadName());
+    }
+
+    // close() ---------------------------------------------------------------------------------------------------------
+
+    @Test
+    public void close_Empty() throws Exception {
+
+        StackTraceParser p = new StackTraceParser();
+
+        List<Event> events = p.close();
+
+        assertEquals(1, events.size());
+        assertTrue(events.get(0) instanceof EndOfStreamEvent);
+
+        //
+        // noop
+        //
+
+        List<Event> events2 = p.close();
+        assertTrue(events2.isEmpty());
     }
 
     // Package protected -----------------------------------------------------------------------------------------------

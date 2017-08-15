@@ -105,7 +105,7 @@ public class JavaThreadDumpEvent extends GenericTimedEvent {
             throw new IllegalArgumentException("null stack trace");
         }
 
-        String tid = stackTrace.getTidAsHexString();
+        String tid = stackTrace.getTid();
         if (tid == null) {
 
             tid = UUID.randomUUID().toString();

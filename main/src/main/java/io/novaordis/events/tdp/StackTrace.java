@@ -8,6 +8,7 @@ import java.io.StringReader;
  *
  * Copyright 2010 Ovidiu Feodorov
  */
+@Deprecated
 public class StackTrace {
 
     // Constants -------------------------------------------------------------------------------------------------------
@@ -151,50 +152,6 @@ public class StackTrace {
     private void parseFirstLine(String line) {
 
         throw new RuntimeException("remove this");
-
-//        if (line == null) {
-//
-//            return;
-//        }
-//
-//        if (!line.startsWith("\"")) {
-//
-//            return;
-//        }
-//
-//        line = line.substring(1);
-//
-//        int i = line.indexOf("\"");
-//
-//        if (i == -1) {
-//
-//            // quotes don't close
-//            return;
-//        }
-//
-//        this.name = line.substring(0, i);
-//
-//        i = line.indexOf("tid=");
-//
-//        if (i != -1) {
-//
-//            int j = line.indexOf(' ', i);
-//
-//            if (j == -1) {
-//
-//                j = line.length();
-//            }
-//
-//            String hex = line.substring(i + "tid=".length(), j);
-//
-//            if (hex.startsWith("0x")) {
-//
-//                tidHexRepresentationStartsWith0x = true;
-//                hex = hex.substring("0x".length());
-//            }
-//            tidHexRepresentationLength = hex.length();
-//            tid = Long.parseUnsignedLong(hex, 16);
-//        }
     }
 
     // Inner classes ---------------------------------------------------------------------------------------------------
