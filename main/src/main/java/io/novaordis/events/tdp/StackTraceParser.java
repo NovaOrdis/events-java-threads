@@ -37,7 +37,7 @@ public class StackTraceParser extends ParserBase {
     // Constants -------------------------------------------------------------------------------------------------------
 
     public static final Pattern STACK_TRACE_HEADER_PATTERN = Pattern.compile(
-            "^\"(.+)\"(.+) tid=(0[xX][0-9a-fA-F]+)( .*$)");
+            "^\"(.+)\"(.+) tid=([^ ]+)( .*$)");
 
     private static final Logger log = LoggerFactory.getLogger(StackTraceParser.class);
 
@@ -56,82 +56,56 @@ public class StackTraceParser extends ParserBase {
     @Override
     protected List<Event> parse(long lineNumber, String line) throws ParsingException {
 
-        List<Event> result = null;
-
-        if (line.isEmpty()) {
-
-            //
-            // stack trace separator found
-            //
-
-            if (currentStackTrace != null) {
-
-                if (log.isDebugEnabled()) {
-
-                    log.debug(currentStackTrace.toString() + " parsing complete");
-                }
-
-                result = Collections.singletonList(currentStackTrace);
-                currentStackTrace = null;
-                return result;
-            }
-            else {
-
-                if (log.isDebugEnabled()) {
-
-                    log.debug("line " + lineNumber + ": empty line ignored");
-                }
-
-                return EMPTY_LIST;
-            }
-        }
+        List<Event> result = EMPTY_LIST;
 
         Matcher m = STACK_TRACE_HEADER_PATTERN.matcher(line);
 
         if (m.matches()) {
 
-            if (log.isDebugEnabled()) {
-
-                log.debug("stack trace header identified at line " + lineNumber);
-            }
-
             if (currentStackTrace != null) {
 
                 result = Collections.singletonList(currentStackTrace);
+                log.debug("parsing complete for " + currentStackTrace.toString());
+            }
+
+            if (log.isDebugEnabled()) {
+
+                log.debug("new stack trace header identified at line " + lineNumber);
             }
 
             currentStackTrace = new StackTraceEvent(lineNumber);
 
             //
             // we process all expected fields in a long try/catch, and any exception at this stage gets the whole
-            // thread stack discarded, and a warning message sent to log
+            // thread stack discarded, and a warning message sent to log; if all goes well, the event will be updated
+            // and the header will be added to the raw representation.
             //
 
             try {
 
-                processStackTraceHeader(currentStackTrace, m.group(1), m.group(3), m.group(2), m.group(4));
+                processStackTraceHeader(
+                        lineNumber, currentStackTrace, m.group(1), m.group(3), m.group(2), m.group(4), line);
             }
             catch(Exception e) {
 
                 log.warn("line " + lineNumber + ": " + e.getMessage());
                 log.debug("current stack trace event " + currentStackTrace + " is being discarded");
                 currentStackTrace = null;
-                return EMPTY_LIST;
+                return result;
             }
         }
         else {
 
             //
             // the line did not match the header pattern; for the time being, accumulate it to raw representation of
-            // the thread stack
+            // the thread stack; this includes empty lines as well, we keep accumulating until we find another
+            // thread dump
             //
 
             if (currentStackTrace != null) {
 
-                if (log.isDebugEnabled()) {
+                currentStackTrace.appendToRawRepresentation(lineNumber, line);
 
-                    log.debug("adding line " + lineNumber + " to the raw representation of " + currentStackTrace);
-                }
             }
             else {
 
@@ -139,20 +113,13 @@ public class StackTraceParser extends ParserBase {
             }
         }
 
-        if (result == null) {
-
-            return EMPTY_LIST;
-        }
-        else {
-
-            return result;
-        }
+        return result;
     }
 
     @Override
     protected List<Event> close(long lineNumber) throws ParsingException {
 
-        return Collections.emptyList();
+        return flush();
     }
 
     // Public ----------------------------------------------------------------------------------------------------------
@@ -162,7 +129,14 @@ public class StackTraceParser extends ParserBase {
      */
     public List<Event> flush() {
 
-        return Collections.emptyList();
+        if (currentStackTrace != null) {
+
+            List<Event> result = Collections.singletonList(currentStackTrace);
+            currentStackTrace = null;
+            return result;
+        }
+
+        return EMPTY_LIST;
     }
 
     // Package protected -----------------------------------------------------------------------------------------------
@@ -176,12 +150,13 @@ public class StackTraceParser extends ParserBase {
      * @param tid the TID identified by the regular expression.
      * @param fragment the header fragment between the header name and TID.
      * @param fragment2 the header fragment that comes after the TID.
+     * @param rawHeader provided "as is", to be added to the raw representation, if the instance wants to do that.
      *
      * @throws Exception
      */
     static void processStackTraceHeader(
-            StackTraceEvent e, String threadName, String tid, String fragment, String fragment2)
-            throws Exception {
+            Long lineNumber, StackTraceEvent e, String threadName,
+            String tid, String fragment, String fragment2, String rawHeader) throws Exception {
 
 
         e.setThreadName(threadName);
@@ -251,6 +226,8 @@ public class StackTraceParser extends ParserBase {
         //
 
         e.setThreadState(fragment2.substring(j));
+
+        e.appendToRawRepresentation(lineNumber, rawHeader);
     }
 
     // Protected -------------------------------------------------------------------------------------------------------

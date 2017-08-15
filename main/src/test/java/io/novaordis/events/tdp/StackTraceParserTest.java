@@ -89,6 +89,9 @@ public class StackTraceParserTest {
         assertEquals("0x00007f6220025000", e.getTid());
         assertEquals("0x1829", e.getNid());
         assertEquals(ThreadState.RUNNABLE, e.getThreadState());
+
+        String raw = e.getRawRepresentation();
+        assertEquals(content, raw);
     }
 
     /**
@@ -98,12 +101,13 @@ public class StackTraceParserTest {
     public void parse_InvalidHeaderLine_TheWholeTraceWillBeSkippedButNextOneWillBeCollected_FirstTrace()
             throws Exception {
 
-        String content =
-                "\"GC task thread#0 (ParallelGC)\" os_prio=? tid=0x00007f6220025000 nid=0x1829 runnable\n" +
-                "this line does not matter\n" +
-                "\n" +
-                "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0x00007f6220026800 nid=0x182a runnable\n" +
-                "\n";
+        String line1 = "\"GC task thread#0 (ParallelGC)\" os_prio=? tid=0x00007f6220025000 nid=0x1829 runnable\n";
+        String line2 = "this line does not matter\n";
+        String line3 = "\n";
+        String line4 = "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0x00007f6220026800 nid=0x182a runnable\n";
+        String line5 = "\n";
+
+        String content = line1 + line2 + line3 + line4 + line5;
 
         StackTraceParser p = new StackTraceParser();
 
@@ -131,6 +135,9 @@ public class StackTraceParserTest {
         StackTraceEvent e = (StackTraceEvent)events.get(0);
 
         assertEquals("GC task thread#1 (ParallelGC)", e.getThreadName());
+
+        String raw = e.getRawRepresentation();
+        assertEquals(line4 + line5, raw);
     }
 
     /**
@@ -140,13 +147,14 @@ public class StackTraceParserTest {
     public void parse_InvalidHeaderLine_TheWholeTraceWillBeSkippedButNextOneWillBeCollected_NotFirstTrace()
             throws Exception {
 
-        String content =
-                "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n" +
-                        "\n" +
-                        "\"GC task thread#1 (ParallelGC)\" os_prio=? tid=0x00007f6220026800 nid=0x182a runnable\n" +
-                        "\n" +
-                        "\"GC task thread#2 (ParallelGC)\" os_prio=0 tid=0x00007f6220028800 nid=0x182b runnable\n" +
-                        "\n";
+        String line1 = "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n";
+        String line2 = "\n";
+        String line3 = "\"GC task thread#1 (ParallelGC)\" os_prio=? tid=0x00007f6220026800 nid=0x182a runnable\n";
+        String line4 = "\n";
+        String line5 = "\"GC task thread#2 (ParallelGC)\" os_prio=0 tid=0x00007f6220028800 nid=0x182b runnable\n";
+        String line6 = "\n";
+
+        String content = line1 + line2 + line3 + line4 + line5 + line6;
 
         StackTraceParser p = new StackTraceParser();
 
@@ -172,23 +180,24 @@ public class StackTraceParserTest {
         assertEquals(2, events.size());
 
         StackTraceEvent e = (StackTraceEvent)events.get(0);
-
         assertEquals("GC task thread#0 (ParallelGC)", e.getThreadName());
+        assertEquals(line1 + line2, e.getRawRepresentation());
 
         StackTraceEvent e2 = (StackTraceEvent)events.get(1);
-
         assertEquals("GC task thread#2 (ParallelGC)", e2.getThreadName());
+        assertEquals(line5 + line6, e2.getRawRepresentation());
     }
 
     @Test
     public void parse_InvalidTID_TheWholeTraceWillBeSkippedButNextOneWillBeCollected_FirstTrace() throws Exception {
 
-        String content =
-                "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=something-that-is-not-hex nid=0x1829 runnable\n" +
-                        "this line does not matter\n" +
-                        "\n" +
-                        "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0x00007f6220026800 nid=0x182a runnable\n" +
-                        "\n";
+        String line1 = "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=something-that-is-not-hex nid=0x1829 runnable\n";
+        String line2 = "this line does not matter\n";
+        String line3 = "\n";
+        String line4 = "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0x00007f6220026800 nid=0x182a runnable\n";
+        String line5 = "\n";
+
+        String content = line1 + line2 + line3 + line4 + line5;
 
         StackTraceParser p = new StackTraceParser();
 
@@ -212,10 +221,9 @@ public class StackTraceParserTest {
         br.close();
 
         assertEquals(1, events.size());
-
         StackTraceEvent e = (StackTraceEvent)events.get(0);
-
         assertEquals("GC task thread#1 (ParallelGC)", e.getThreadName());
+        assertEquals(line4 + line5, e.getRawRepresentation());
     }
 
     /**
@@ -224,13 +232,14 @@ public class StackTraceParserTest {
     @Test
     public void parse_InvalidTID_TheWholeTraceWillBeSkippedButNextOneWillBeCollected_NotFirstTrace() throws Exception {
 
-        String content =
-                "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n" +
-                        "\n" +
-                        "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=something-that-is-not-hex nid=0x182a runnable\n" +
-                        "\n" +
-                        "\"GC task thread#2 (ParallelGC)\" os_prio=0 tid=0x00007f6220028800 nid=0x182b runnable\n" +
-                        "\n";
+        String line1 = "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n";
+        String line2 = "\n";
+        String line3 = "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=something-that-is-not-hex nid=0x182a runnable\n";
+        String line4 = "\n";
+        String line5 = "\"GC task thread#2 (ParallelGC)\" os_prio=0 tid=0x00007f6220028800 nid=0x182b runnable\n";
+        String line6 = "\n";
+
+        String content = line1 + line2 + line3 + line4 + line5 + line6;
 
         StackTraceParser p = new StackTraceParser();
 
@@ -256,24 +265,25 @@ public class StackTraceParserTest {
         assertEquals(2, events.size());
 
         StackTraceEvent e = (StackTraceEvent)events.get(0);
-
         assertEquals("GC task thread#0 (ParallelGC)", e.getThreadName());
+        assertEquals(line1 + line2, e.getRawRepresentation());
 
         StackTraceEvent e2 = (StackTraceEvent)events.get(1);
-
         assertEquals("GC task thread#2 (ParallelGC)", e2.getThreadName());
+        assertEquals(line5 + line6, e2.getRawRepresentation());
     }
 
     @Test
     public void parse_InvalidThreadState_TheWholeTraceWillBeSkippedButNextOneWillBeCollected_FirstTrace()
             throws Exception {
 
-        String content =
-                "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0xff nid=0x1829 no-such-thread-state\n" +
-                        "this line does not matter\n" +
-                        "\n" +
-                        "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0x00007f6220026800 nid=0x182a runnable\n" +
-                        "\n";
+        String line1 = "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0xff nid=0x1829 no-such-thread-state\n";
+        String line2 = "this line does not matter\n";
+        String line3 = "\n";
+        String line4 = "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0x00007f6220026800 nid=0x182a runnable\n";
+        String line5 = "\n";
+
+        String content = line1 + line2 + line3 + line4 + line5;
 
         StackTraceParser p = new StackTraceParser();
 
@@ -299,8 +309,8 @@ public class StackTraceParserTest {
         assertEquals(1, events.size());
 
         StackTraceEvent e = (StackTraceEvent)events.get(0);
-
         assertEquals("GC task thread#1 (ParallelGC)", e.getThreadName());
+        assertEquals(line4 + line5, e.getRawRepresentation());
     }
 
     /**
@@ -310,13 +320,14 @@ public class StackTraceParserTest {
     public void parse_InvalidThreadState_TheWholeTraceWillBeSkippedButNextOneWillBeCollected_NotFirstTrace()
             throws Exception {
 
-        String content =
-                "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0xfe nid=0x1829 runnable\n" +
-                        "\n" +
-                        "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0xff nid=0x182a no-such-thread-state\n" +
-                        "\n" +
-                        "\"GC task thread#2 (ParallelGC)\" os_prio=0 tid=0x00007f6220028800 nid=0x182b runnable\n" +
-                        "\n";
+        String line1 = "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0xfe nid=0x1829 runnable\n";
+        String line2 = "\n";
+        String line3 = "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0xff nid=0x182a no-such-thread-state\n";
+        String line4 = "\n";
+        String line5 = "\"GC task thread#2 (ParallelGC)\" os_prio=0 tid=0x00007f6220028800 nid=0x182b runnable\n";
+        String line6 = "\n";
+
+        String content = line1 + line2 + line3 + line4 + line5 + line6;
 
         StackTraceParser p = new StackTraceParser();
 
@@ -342,12 +353,12 @@ public class StackTraceParserTest {
         assertEquals(2, events.size());
 
         StackTraceEvent e = (StackTraceEvent)events.get(0);
-
         assertEquals("GC task thread#0 (ParallelGC)", e.getThreadName());
+        assertEquals(line1 + line2, e.getRawRepresentation());
 
         StackTraceEvent e2 = (StackTraceEvent)events.get(1);
-
         assertEquals("GC task thread#2 (ParallelGC)", e2.getThreadName());
+        assertEquals(line5 + line6, e2.getRawRepresentation());
     }
 
     @Test
@@ -398,6 +409,9 @@ public class StackTraceParserTest {
         assertEquals("0x1832", e.getNid());
         assertEquals(ThreadState.OBJECT_WAIT, e.getThreadState());
         assertEquals("0x00007f6209147000", e.getMonitor());
+
+        String rawContent = e.getRawRepresentation();
+        assertEquals(rawContent, content);
     }
 
     // close() ---------------------------------------------------------------------------------------------------------
@@ -427,7 +441,8 @@ public class StackTraceParserTest {
 
         StackTraceEvent e = new StackTraceEvent(7L);
 
-        StackTraceParser.processStackTraceHeader(e, "something", "0xff", " os_prio=0", " nid=0x1829 runnable");
+        StackTraceParser.processStackTraceHeader(
+                7L, e, "something", "0xff", " os_prio=0", " nid=0x1829 runnable", "mock raw header");
 
         assertEquals("something", e.getThreadName());
         assertEquals("0xff", e.getTid());
@@ -441,9 +456,10 @@ public class StackTraceParserTest {
 
         StackTraceEvent e = new StackTraceEvent(7L);
 
-        StackTraceParser.processStackTraceHeader(e, "something", "0xff",
+        StackTraceParser.processStackTraceHeader(
+                7L, e, "something", "0xff",
                 "  #2 daemon prio=10 os_prio=1",
-                " nid=0x1832 in Object.wait() [0x00007f6209147000]");
+                " nid=0x1832 in Object.wait() [0x00007f6209147000]", "mock raw header");
 
         assertEquals("something", e.getThreadName());
         assertEquals("0xff", e.getTid());
@@ -453,9 +469,9 @@ public class StackTraceParserTest {
         assertEquals("0x1832", e.getNid());
 
         ThreadState ts = e.getThreadState();
-        //assertEquals(ThreadState.OBJECT_WAIT, ts.);
+        assertEquals(ThreadState.OBJECT_WAIT, ts);
+        assertEquals("0x00007f6209147000", e.getMonitor());
     }
-
 
     // Package protected -----------------------------------------------------------------------------------------------
 

@@ -375,6 +375,36 @@ public class StackTraceEvent extends GenericEvent {
         setStringProperty(OBJECT_WAIT_MONITOR_PROPERTY_NAME, s);
     }
 
+    public void appendToRawRepresentation(Long lineNumber, String line) {
+
+        String raw = null;
+
+        StringProperty sp = getStringProperty(RAW_PROPERTY_NAME);
+
+        if (sp != null) {
+
+            raw = sp.getString();
+        }
+
+        if (raw == null) {
+
+            raw = line;
+        }
+        else {
+
+            raw += line;
+        }
+
+        raw += "\n";
+
+        setStringProperty(RAW_PROPERTY_NAME, raw);
+
+        if (log.isDebugEnabled()) {
+
+            log.debug("line " + lineNumber + " appended to the raw representation of " + this);
+        }
+    }
+
     @Override
     public String toString() {
 
