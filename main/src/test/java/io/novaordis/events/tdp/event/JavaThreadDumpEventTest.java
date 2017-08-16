@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -116,6 +117,65 @@ public class JavaThreadDumpEventTest {
         assertEquals(17L, t4.getLineNumber().longValue());
         StackTraceEvent t5 = traces2.get(1);
         assertEquals(21L, t5.getLineNumber().longValue());
+    }
+
+    // getStackTraceEvent() --------------------------------------------------------------------------------------------
+
+    @Test
+    public void getStackTraceEvent_ObviouslyIncorrectIndex() throws Exception {
+
+        JavaThreadDumpEvent tde = new JavaThreadDumpEvent(7L, 1L);
+
+        try {
+
+            tde.getStackTraceEvent(-1);
+            fail("there cannot be a -1 index, this invocation must throw exception");
+        }
+        catch(IllegalArgumentException e) {
+
+            String msg = e.getMessage();
+            assertTrue(msg.contains("invalid index"));
+        }
+    }
+
+    @Test
+    public void getStackTraceEvent() throws Exception {
+
+        JavaThreadDumpEvent tde = new JavaThreadDumpEvent(7L, 1L);
+
+        StackTraceEvent t = new StackTraceEvent(17L);
+        tde.addStackTrace(t);
+
+        assertEquals(t, tde.getStackTraceEvent(0));
+
+        StackTraceEvent t2 = new StackTraceEvent(19L);
+        tde.addStackTrace(t2);
+
+        assertEquals(t, tde.getStackTraceEvent(0));
+        assertEquals(t2, tde.getStackTraceEvent(1));
+
+        assertNull(tde.getStackTraceEvent(2));
+        assertNull(tde.getStackTraceEvent(3));
+    }
+
+    // getThreadCount() ------------------------------------------------------------------------------------------------
+
+    @Test
+    public void getThreadCount() throws Exception {
+
+        JavaThreadDumpEvent tde = new JavaThreadDumpEvent(7L, 1L);
+
+        assertEquals(0, tde.getThreadCount());
+
+        StackTraceEvent t = new StackTraceEvent(17L);
+        tde.addStackTrace(t);
+
+        assertEquals(1, tde.getThreadCount());
+
+        StackTraceEvent t2 = new StackTraceEvent(19L);
+        tde.addStackTrace(t2);
+
+        assertEquals(2, tde.getThreadCount());
     }
 
     // Package protected -----------------------------------------------------------------------------------------------

@@ -17,6 +17,7 @@
 package io.novaordis.events.tdp.event;
 
 import io.novaordis.events.api.event.Event;
+import io.novaordis.events.api.event.EventProperty;
 import io.novaordis.events.api.event.GenericTimedEvent;
 import io.novaordis.events.api.event.Property;
 import io.novaordis.utilities.time.TimestampImpl;
@@ -143,26 +144,35 @@ public class JavaThreadDumpEvent extends GenericTimedEvent {
 
     public int getThreadCount() {
 
-        throw new RuntimeException("NOT YET IMPLEMENTED");
+        return getProperties(StackTraceEvent.class).size();
     }
 
     /**
      * @param index the index of the stack trace as it appears in the thread dump: first stack trace has the index 0,
      *              the next one 1, etc. If there is no corresponding stack trace, the method does not throw exception,
-     *              but simply returns null.
+     *              but simply returns null, unless the index is obviously invalid - such as a negative index.
+     *
+     * @exception IllegalArgumentException on invalid index
      */
-    public StackTraceEvent getStackTraceEvent(int index) {
+    public StackTraceEvent getStackTraceEvent(int index) throws IllegalArgumentException {
 
-        throw new RuntimeException("NOT YET IMPLEMENTED");
-    }
+        if (index < 0) {
 
-    /**
-     * @return the memory snapshot carried by the thread dump. It may return null, if no memory snapshot appears in the
-     * thread dump.
-     */
-    public MemorySnapshotEvent getMemorySnapshot() {
+            throw new IllegalArgumentException("invalid index: " + index);
+        }
 
-        throw new RuntimeException("NOT YET IMPLEMENTED");
+        int i = 0;
+        for(Property p: getProperties(StackTraceEvent.class)) {
+
+            if (i == index) {
+
+                return ((StackTraceEvent) ((EventProperty) p).getEvent());
+            }
+
+            i ++;
+        }
+
+        return null;
     }
 
     @Override

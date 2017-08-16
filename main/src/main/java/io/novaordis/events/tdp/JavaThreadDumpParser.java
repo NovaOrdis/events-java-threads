@@ -21,6 +21,7 @@ import io.novaordis.events.api.event.Event;
 import io.novaordis.events.api.parser.ParserBase;
 import io.novaordis.events.api.parser.ParsingException;
 import io.novaordis.events.tdp.event.JavaThreadDumpEvent;
+import io.novaordis.events.tdp.event.MemorySnapshotEvent;
 import io.novaordis.events.tdp.event.StackTraceEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -77,6 +79,9 @@ public class JavaThreadDumpParser extends ParserBase {
             Pattern.compile("^Full thread dump.*$"),
     };
 
+    private static final String MARKER_JNI_GLOBAL_REFERENCES = "JNI global references:";
+    private static final String MARKER_HEAP = "Heap";
+
     private static final List<Event> EMPTY_EVENT_LIST = Collections.emptyList();
 
     // Static ----------------------------------------------------------------------------------------------------------
@@ -91,6 +96,8 @@ public class JavaThreadDumpParser extends ParserBase {
 
     private boolean discardEmptyLine;
 
+    private MemorySnapshotEvent memorySnapshotEvent;
+
     // Constructors ----------------------------------------------------------------------------------------------------
 
     public JavaThreadDumpParser() {
@@ -100,6 +107,9 @@ public class JavaThreadDumpParser extends ParserBase {
 
     // ParserBase overrides --------------------------------------------------------------------------------------------
 
+    /**
+     * @return StackTraceEvents, MemorySnapshotEvents, etc.
+     */
     @Override
     protected List<Event> parse(long lineNumber, String line) throws ParsingException {
 
@@ -187,6 +197,45 @@ public class JavaThreadDumpParser extends ParserBase {
                 discardEmptyLine = true;
             }
         }
+        else if (memorySnapshotEvent != null) {
+
+            if (line.trim().isEmpty()) {
+
+                if (log.isDebugEnabled()) {
+
+                    log.debug("line " + lineNumber + " concludes memory snapshot parsing");
+                }
+
+                result = Collections.singletonList(memorySnapshotEvent);
+                memorySnapshotEvent = null;
+            }
+            else {
+
+                memorySnapshotEvent.parse(line);
+            }
+        }
+        else if (line.startsWith(MARKER_JNI_GLOBAL_REFERENCES) || line.startsWith(MARKER_HEAP)) {
+
+            //
+            // we are not doing anything with it yet, but we use the information to tokenize the stream
+            //
+
+            if (currentJavaThreadDumpEvent != null) {
+
+                //
+                // there are no more stack traces coming after this, so we don't want to append this line the last
+                // one, wrap up the current thread dump instead
+                //
+
+                result = wrapUpCurrentThreadDump(currentJavaThreadDumpEvent, stackTraceParser);
+                currentJavaThreadDumpEvent = null;
+            }
+
+            if (line.startsWith(MARKER_HEAP)) {
+
+                memorySnapshotEvent = new MemorySnapshotEvent();
+            }
+        }
         else {
 
             //
@@ -213,19 +262,11 @@ public class JavaThreadDumpParser extends ParserBase {
 
                     //
                     // since we established that another thread dump is starting, we are wrapping up the current thread
-                    // dump event, if any. Collect all leftovers from the stack trace parser, but don't close the stack
-                    // trace parser, we'll need it for the upcoming thread dump events
+                    // dump event, if any. The method collects all leftovers from the stack trace parser, but does not
+                    // close the stack trace parser
                     //
 
-                    List<Event> stackTraces = stackTraceParser.flush();
-                    currentJavaThreadDumpEvent.addStackTraces(stackTraces);
-                    result = Collections.singletonList(currentJavaThreadDumpEvent);
-
-                    if (log.isDebugEnabled()) {
-
-                        log.debug(currentJavaThreadDumpEvent.toString() + " parsing complete");
-                    }
-
+                    result = wrapUpCurrentThreadDump(currentJavaThreadDumpEvent, stackTraceParser);
                     currentJavaThreadDumpEvent = null;
                 }
             }
@@ -262,32 +303,43 @@ public class JavaThreadDumpParser extends ParserBase {
         }
     }
 
+    /**
+     * @return StackTraceEvents, MemorySnapshotEvents, EndOfStreamEvents.
+     */
     @Override
     protected List<Event> close(long lineNumber) throws ParsingException {
 
-        if (currentJavaThreadDumpEvent == null) {
+        List<Event> result = new ArrayList<>();
 
-            return EMPTY_EVENT_LIST;
-        }
+        if (currentJavaThreadDumpEvent != null) {
 
-        //
-        // collect all leftovers from the stack trace parser
-        //
 
-        List<Event> stackTraces = stackTraceParser.close();
+            //
+            // collect all leftovers from the stack trace parser
+            //
 
-        for(Event e: stackTraces) {
+            List<Event> stackTraces = stackTraceParser.close();
 
-            if (e instanceof EndOfStreamEvent) {
+            for (Event e : stackTraces) {
 
-                break;
+                if (e instanceof EndOfStreamEvent) {
+
+                    break;
+                }
+
+                StackTraceEvent ste = (StackTraceEvent) e;
+                currentJavaThreadDumpEvent.addStackTrace(ste);
             }
 
-            StackTraceEvent ste = (StackTraceEvent)e;
-            currentJavaThreadDumpEvent.addStackTrace(ste);
+            result.add(currentJavaThreadDumpEvent);
         }
 
-        return Collections.singletonList(currentJavaThreadDumpEvent);
+        if (memorySnapshotEvent != null) {
+
+            result.add(memorySnapshotEvent);
+        }
+
+        return result;
     }
 
     // Public ----------------------------------------------------------------------------------------------------------
@@ -297,6 +349,33 @@ public class JavaThreadDumpParser extends ParserBase {
     // Protected -------------------------------------------------------------------------------------------------------
 
     // Private ---------------------------------------------------------------------------------------------------------
+
+    /**
+     * Wrap up the given (current) thread dump event: collect all leftovers from the stack trace parser, but don't close
+     * the stack trace parser, as it will be needed to process upcoming thread dump events.
+     */
+    private static List<Event> wrapUpCurrentThreadDump(JavaThreadDumpEvent current, StackTraceParser stackTraceParser) {
+
+        if (current == null) {
+
+            //
+            // nothing to wrap up, we probably shouldn't have been called anyway
+            //
+
+            return EMPTY_EVENT_LIST;
+        }
+
+        List<Event> stackTraces = stackTraceParser.flush();
+        current.addStackTraces(stackTraces);
+        List<Event> result = Collections.singletonList(current);
+
+        if (log.isDebugEnabled()) {
+
+            log.debug(current.toString() + " parsing complete");
+        }
+
+        return result;
+    }
 
     // Inner classes ---------------------------------------------------------------------------------------------------
 
