@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -362,6 +364,74 @@ public class StackTraceParserTest {
     }
 
     @Test
+    public void testValidDefinition() throws Exception {
+
+        String content =
+                "\"http-192.168.30.11-8080-2035\" daemon prio=10 tid=0x000000005078a800 nid=0x4218 waiting for monitor entry [0x00002aab56862000]\n" +
+                        "   java.lang.Thread.State: BLOCKED (on object monitor)\n" +
+                        "\tat java.lang.Throwable.printStackTrace(Throwable.java:460)";
+
+        StackTraceParser p = new StackTraceParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        long lineNumber = 1;
+
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        List<Event> es = p.flush();
+        events.addAll(es);
+
+        br.close();
+
+        assertEquals(1, events.size());
+
+        StackTraceEvent e = (StackTraceEvent)events.get(0);
+
+        assertEquals("http-192.168.30.11-8080-2035", e.getThreadName());
+    }
+
+    @Test
+    public void testValidDefinition_QuotesDoNotClose() throws Exception {
+
+        String content =
+                "\"http-192.168.30.11-8080-2035\n" +
+                        "   java.lang.Thread.State: BLOCKED (on object monitor)\n" +
+                        "\tat java.lang.Throwable.printStackTrace(Throwable.java:460)";
+
+        StackTraceParser p = new StackTraceParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        long lineNumber = 1;
+
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        List<Event> es = p.flush();
+        events.addAll(es);
+
+        br.close();
+
+        assertTrue(events.isEmpty());
+    }
+
+    @Test
     public void parse_Production1() throws Exception {
 
         String content =
@@ -468,94 +538,112 @@ public class StackTraceParserTest {
         StackTraceEvent e = (StackTraceEvent)events.get(0);
 
         assertEquals("http-0.0.0.0:8443-266", e.getThreadName());
-//        assertTrue(e.isDaemon());
-//        assertEquals(10, e.getPrio().intValue());
-//        assertEquals(0, e.getOsPrio().intValue());
-//        assertEquals("0x00007f62201d2000", e.getTid());
-//        assertEquals("0x1832", e.getNid());
-//        assertEquals(ThreadState.OBJECT_WAIT, e.getThreadState());
-//        assertEquals("0x00007f6209147000", e.getMonitor());
-//
-//        String rawContent = e.getRawRepresentation();
-//        assertEquals(rawContent, content);
-//
-//        StackTrace t = new StackTrace(1, s);
-//
-//        assertEquals("http-0.0.0.0:8443-266", t.getName());
-//        assertEquals("0x00007f7dc853b800", t.getTidAsHexString());
-//        assertEquals(s, t.getOriginal());
-//        assertFalse(t.isEmpty());
-//        assertTrue(t.isValid());
+        assertTrue(e.isDaemon());
+        assertEquals(5, e.getPrio().intValue());
+        assertEquals(0, e.getOsPrio().intValue());
+        assertEquals("0x00007f7dc853b800", e.getTid());
+        assertEquals("0x4799", e.getNid());
+        assertEquals(ThreadState.RUNNABLE, e.getThreadState());
+        assertEquals("0x00007f7d871f0000", e.getMonitor());
 
+        String rawContent = e.getRawRepresentation();
+        assertEquals(rawContent, content);
     }
 
-//    @Test
-//    public void testValidDefinition() throws Exception {
-//
-//        String s =
-//                "\"http-192.168.30.11-8080-2035\" daemon prio=10 tid=0x000000005078a800 nid=0x4218 waiting for monitor entry [0x00002aab56862000]\n" +
-//                        "   java.lang.Thread.State: BLOCKED (on object monitor)\n" +
-//                        "\tat java.lang.Throwable.printStackTrace(Throwable.java:460)";
-//
-//        StackTrace td = new StackTrace();
-//
-//        String line;
-//        BufferedReader br = new BufferedReader(new StringReader(s));
-//        while((line = br.readLine()) != null)
-//        {
-//            td.append(line, -1);
-//        }
-//
-//        assertTrue(td.isValid());
-//        assertEquals("http-192.168.30.11-8080-2035", td.getName());
-//    }
-//
-//    @Test
-//    public void testValidDefinition_QuotesDoNotClose() throws Exception {
-//
-//        String s =
-//                "\"http-192.168.30.11-8080-2035\n" +
-//                        "   java.lang.Thread.State: BLOCKED (on object monitor)\n" +
-//                        "\tat java.lang.Throwable.printStackTrace(Throwable.java:460)";
-//
-//        StackTrace td = new StackTrace();
-//
-//        String line;
-//        BufferedReader br = new BufferedReader(new StringReader(s));
-//        while((line = br.readLine()) != null)
-//        {
-//            td.append(line, -1);
-//        }
-//
-//        assertFalse(td.isValid());
-//        assertNull(td.getName());
-//    }
-//
-//
-//    // match() ---------------------------------------------------------------------------------------------------------
-//
-//    @Test
-//    public void testMatch() throws Exception {
-//
-//        StackTrace td = new StackTrace();
-//
-//        td.append("\"ajp-10.7.25.129-8009-587\" daemon prio=3 tid=0x000000010be0c000 nid=0x34d runnable [0xfffffffe1b07e000]", -1);
-//        td.append("   java.lang.Thread.State: RUNNABLE", -1);
-//        td.append("\tat java.net.SocketInputStream.socketRead0(Native Method)", -1);
-//        td.append("\tat java.net.SocketInputStream.read(SocketInputStream.java:129)", -1);
-//        td.append("\tat java.net.ManagedSocketInputStreamHighPerformance.read(ManagedSocketInputStreamHighPerformance.java:258)", -1);
-//        td.append("\tat org.apache.coyote.ajp.AjpProcessor.read(AjpProcessor.java:1036)", -1);
-//        td.append("\tat org.apache.coyote.ajp.AjpProcessor.readMessage(AjpProcessor.java:1115)", -1);
-//        td.append("\tat org.apache.coyote.ajp.AjpProcessor.process(AjpProcessor.java:383)", -1);
-//        td.append("\tat org.apache.coyote.ajp.AjpProtocol$AjpConnectionHandler.process(AjpProtocol.java:384)", -1);
-//        td.append("\tat org.apache.tomcat.util.net.JIoEndpoint$Worker.run(JIoEndpoint.java:451)", -1);
-//        td.append("\tat java.lang.Thread.run(Thread.java:619)", -1);
-//
-//        assertFalse(td.matches("blah"));
-//
-//        assertTrue(td.matches("ajp-10."));
-//    }
+    @Test
+    public void parse_Production3() throws Exception {
 
+        String content =
+                "\n" +
+                        "\"Thread-21\" prio=3 tid=0x00000001069c4800 nid=0x81 in Object.wait() [0xfffffffe4537f000]\n" +
+                        "   java.lang.Thread.State: TIMED_WAITING (on object monitor)\n" +
+                        "\tat java.lang.Object.wait(Native Method)\n" +
+                        "\t- waiting on <0xfffffffe7beb7660> (a java.lang.Object)\n" +
+                        "\tat com.arjuna.ats.internal.arjuna.recovery.PeriodicRecovery.doPeriodicWait(PeriodicRecovery.java:675)\n" +
+                        "\tat com.arjuna.ats.internal.arjuna.recovery.PeriodicRecovery.run(PeriodicRecovery.java:434)\n" +
+                        "\t- locked <0xfffffffe7beb7660> (a java.lang.Object)\n" +
+                        "\n" +
+                        "";
+
+        StackTraceParser p = new StackTraceParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        long lineNumber = 1;
+
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.flush());
+
+        br.close();
+
+        assertEquals(1, events.size());
+
+        StackTraceEvent e = (StackTraceEvent)events.get(0);
+
+        assertEquals("Thread-21", e.getThreadName());
+        assertFalse(e.isDaemon());
+        assertEquals(3, e.getPrio().intValue());
+        assertNull(e.getOsPrio());
+        assertEquals("0x00000001069c4800", e.getTid());
+        assertEquals("0x81", e.getNid());
+        assertEquals(ThreadState.OBJECT_WAIT, e.getThreadState());
+        assertEquals("0xfffffffe4537f000", e.getMonitor());
+    }
+
+    @Test
+    public void parse_Production4() throws Exception {
+
+        String content =
+            "\"http-192.168.30.11-8080-2038\" daemon prio=10 tid=0x000000005208b800 nid=0x421b waiting for monitor entry [0x00002aab56b65000]\n" +
+            "   java.lang.Thread.State: BLOCKED (on object monitor)\n" +
+            "\tat java.lang.Throwable.printStackTrace(Throwable.java:460)\n" +
+            "\t- waiting to lock <0x0000000680a6b8e0> (a org.jboss.logging.util.LoggerStream)\n" +
+            "\tat java.lang.Throwable.printStackTrace(Throwable.java:451)\n" +
+            "\tat org.exoplatform.services.organization.idm.PicketLinkIDMOrganizationServiceImpl.endRequest(PicketLinkIDMOrganizationServiceImpl.java:183)\n" +
+            "\tat java.lang.Thread.run(Thread.java:662)";
+
+        StackTraceParser p = new StackTraceParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        long lineNumber = 1;
+
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.flush());
+
+        br.close();
+
+        assertEquals(1, events.size());
+
+        StackTraceEvent e = (StackTraceEvent)events.get(0);
+
+        assertEquals("http-192.168.30.11-8080-2038", e.getThreadName());
+        assertTrue(e.isDaemon());
+        assertEquals(10, e.getPrio().intValue());
+        assertNull(e.getOsPrio());
+        assertEquals("0x000000005208b800", e.getTid());
+        assertEquals("0x421b", e.getNid());
+        assertEquals(ThreadState.WAITING_FOR_MONITOR_ENTRY, e.getThreadState());
+        assertEquals("0x00002aab56b65000", e.getMonitor());
+    }
 
     // close() ---------------------------------------------------------------------------------------------------------
 

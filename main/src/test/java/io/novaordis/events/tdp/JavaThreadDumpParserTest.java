@@ -21,7 +21,9 @@ import io.novaordis.events.api.event.Event;
 import io.novaordis.events.api.event.EventProperty;
 import io.novaordis.events.api.event.Property;
 import io.novaordis.events.tdp.event.JavaThreadDumpEvent;
+import io.novaordis.events.tdp.event.MemorySnapshotEvent;
 import io.novaordis.events.tdp.event.StackTraceEvent;
+import io.novaordis.events.tdp.event.ThreadState;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -74,6 +76,39 @@ public class JavaThreadDumpParserTest {
     }
 
     // parse() ---------------------------------------------------------------------------------------------------------
+
+    @Test
+    public void parse_InvalidContent() throws Exception {
+
+        String content =
+                "\n" +
+                        "blah\n" +
+                        "blah\n" +
+                        "\n";
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        long lineNumber = 1;
+
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        br.close();
+
+        events.addAll(p.close());
+
+        assertEquals(1, events.size());
+        assertTrue(events.get(0) instanceof EndOfStreamEvent);
+    }
 
     @Test
     public void parse_simplestSyntheticThreadDump() throws Exception {
@@ -381,6 +416,229 @@ public class JavaThreadDumpParserTest {
 
         assertEquals(3, events.size());
     }
+
+    @Test
+    public void parse_Production1() throws Exception {
+
+        File f = new File(System.getProperty("basedir"), "src/test/resources/samples/000.txt");
+
+        assertTrue(f.isFile());
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        long lineNumber = 1;
+
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        List<Event> es = p.close(lineNumber);
+        events.addAll(es);
+
+        br.close();
+
+        assertEquals(1, events.size());
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+
+        assertEquals(3, e.getThreadCount());
+
+        StackTraceEvent ste = e.getStackTraceEvent(2);
+        assertEquals("VM Periodic Task Thread", ste.getThreadName());
+        assertEquals(ThreadState.WAITING_ON_CONDITION, ste.getThreadState());
+
+        MemorySnapshotEvent memorySnapshot = e.getMemorySnapshot();
+    }
+
+    // tests from the previous version ---------------------------------------------------------------------------------
+
+//    @Test
+//    public void testCtor_TimestampAndHeader() throws Exception {
+//
+//        ThreadDumpFile tdf = new ThreadDumpFile(
+//            "./src/test/resources/samples/010_thread_dump_file_timestamp_header.txt");
+//
+//        assertEquals(1, tdf.getCount());
+//
+//        ThreadDump td = tdf.get(0);
+//        assertEquals(ThreadDumpFile.TIMESTAMP_FORMAT.parseObject("2010-12-14 01:02:03"),
+//                     td.getTimestamp());
+//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b01 mixed mode):",
+//                     td.getHeader());
+//
+//        assertEquals(2, td.getThreadCount());
+//    }
+//
+//    @Test
+//    public void testCtor_JustHeader() throws Exception {
+//
+//        ThreadDumpFile tdf = new ThreadDumpFile(
+//            "./src/test/resources/samples/011_thread_dump_header_no_timestamp.txt");
+//
+//        assertEquals(1, tdf.getCount());
+//
+//        ThreadDump td = tdf.get(0);
+//        assertNull(td.getTimestamp());
+//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b01 mixed mode):",
+//                     td.getHeader());
+//        assertEquals(2, td.getThreadCount());
+//    }
+//
+//    @Test
+//    public void testCtor_TwoThreadDumps() throws Exception {
+//
+//        ThreadDumpFile tdf =
+//            new ThreadDumpFile("./src/test/resources/samples/012_two_thread_dumps.txt");
+//
+//        assertEquals(2, tdf.getCount());
+//
+//        ThreadDump td = tdf.get(0);
+//        assertEquals(ThreadDumpFile.TIMESTAMP_FORMAT.parseObject("2010-12-14 01:02:03"),
+//                     td.getTimestamp());
+//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b05 mixed mode):",
+//                     td.getHeader());
+//        assertEquals(2, td.getThreadCount());
+//
+//        td = tdf.get(1);
+//        assertEquals(ThreadDumpFile.TIMESTAMP_FORMAT.parseObject("2011-01-02 03:04:05"),
+//                     td.getTimestamp());
+//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b11 mixed mode):",
+//                     td.getHeader());
+//        assertEquals(3, td.getThreadCount());
+//    }
+//
+//    @Test
+//    public void testCtor_FullThreadDumpOnFirstLine() throws Exception {
+//
+//        // this is NOT a fragment, but an incomplete thread dump
+//
+//        try {
+//
+//            new ThreadDumpFile("./src/test/resources/samples/002_1_FullThreadDumpOnFirstLine.txt");
+//            fail("should have failed with UserErrorException");
+//        }
+//        catch(ParsingException e) {
+//
+//            log.info(e.getMessage());
+//            assertEquals(1, e.getLineNumber().longValue());
+//        }
+//    }
+//
+//    @Test
+//    public void testCtor_FullThreadDumpOnFirstLine_2() throws Exception {
+//
+//        ThreadDumpFile tdf =
+//            new ThreadDumpFile("./src/test/resources/samples/002_2_FullThreadDumpOnFirstLine.txt");
+//
+//        assertEquals(1, tdf.getCount());
+//        ThreadDump td = tdf.get(0);
+//
+//        assertNull(td.getTimestamp());
+//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b71 mixed mode):",
+//                     td.getHeader());
+//
+//        assertEquals(2, td.getThreadCount());
+//    }
+//
+//    @Test
+//    public void testCtor_FullThreadDumpOnInvalidTimestamp() throws Exception {
+//
+//        // this is NOT a fragment, but an incomplete thread dump
+//
+//        try {
+//
+//            new ThreadDumpFile("./src/test/resources/samples/003_FullThreadDumpInvalidTimestamp.txt");
+//            fail("should have failed with UserErrorException");
+//        }
+//        catch(ParsingException e) {
+//
+//            log.info(e.getMessage());
+//            assertEquals(5, e.getLineNumber().longValue());
+//        }
+//    }
+//
+//    @Test
+//    public void testCtor_NoEmptyLineAfterHeader() throws Exception {
+//
+//        try {
+//
+//            new ThreadDumpFile("./src/test/resources/samples/005_NoEmptyLine.txt");
+//            fail("should have failed with UserErrorException");
+//        }
+//        catch(ParsingException e) {
+//
+//            log.info(e.getMessage());
+//            assertEquals(9, e.getLineNumber().longValue());
+//        }
+//    }
+//
+//    @Test
+//    public void testCtor_Minimal() throws Exception {
+//
+//        ThreadDumpFile tdf = new ThreadDumpFile("./src/test/resources/samples/004_Minimal.txt");
+//
+//        assertEquals(1, tdf.getCount());
+//        ThreadDump td = tdf.get(0);
+//
+//        assertEquals(ThreadDumpFile.TIMESTAMP_FORMAT.parseObject("2011-09-09 15:16:17"),
+//                     td.getTimestamp());
+//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (15.3-b01 mixed mode):",
+//                     td.getHeader());
+//        assertEquals(2, td.getThreadCount());
+//    }
+//
+//    @Test
+//    public void testCtor_Real_001() throws Exception {
+//
+//        ThreadDumpFile tdf = new ThreadDumpFile("./src/test/resources/samples/001.txt");
+//
+//        assertEquals(1, tdf.getCount());
+//        ThreadDump td = tdf.get(0);
+//
+//        assertEquals(ThreadDumpFile.TIMESTAMP_FORMAT.parseObject("2011-10-04 00:09:02"),
+//                     td.getTimestamp());
+//
+//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b01 mixed mode):",
+//                     td.getHeader());
+//
+//        assertEquals(786, td.getThreadCount());
+//    }
+//
+//    @Test
+//    public void testFilteredFragment_NoCR() throws Exception {
+//
+//        ThreadDumpFile tdf =
+//            new ThreadDumpFile("./src/test/resources/samples/013_filtered_fragment_no_CR.txt");
+//
+//        assertEquals(1, tdf.getCount());
+//        ThreadDump td = tdf.get(0);
+//
+//        assertNull(td.getTimestamp());
+//        assertNull(td.getHeader());
+//        assertEquals(1, td.getThreadCount());
+//    }
+//
+//    @Test
+//    public void testFilteredFragment() throws Exception {
+//
+//        ThreadDumpFile tdf =
+//            new ThreadDumpFile("./src/test/resources/samples/014_filtered_fragment.txt");
+//
+//        assertEquals(1, tdf.getCount());
+//        ThreadDump td = tdf.get(0);
+//
+//        assertNull(td.getTimestamp());
+//        assertNull(td.getHeader());
+//        assertEquals(2, td.getThreadCount());
+//    }
 
     // Package protected -----------------------------------------------------------------------------------------------
 

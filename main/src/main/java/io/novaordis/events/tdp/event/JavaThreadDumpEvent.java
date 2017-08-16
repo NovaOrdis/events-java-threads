@@ -141,6 +141,30 @@ public class JavaThreadDumpEvent extends GenericTimedEvent {
         return result;
     }
 
+    public int getThreadCount() {
+
+        throw new RuntimeException("NOT YET IMPLEMENTED");
+    }
+
+    /**
+     * @param index the index of the stack trace as it appears in the thread dump: first stack trace has the index 0,
+     *              the next one 1, etc. If there is no corresponding stack trace, the method does not throw exception,
+     *              but simply returns null.
+     */
+    public StackTraceEvent getStackTraceEvent(int index) {
+
+        throw new RuntimeException("NOT YET IMPLEMENTED");
+    }
+
+    /**
+     * @return the memory snapshot carried by the thread dump. It may return null, if no memory snapshot appears in the
+     * thread dump.
+     */
+    public MemorySnapshotEvent getMemorySnapshot() {
+
+        throw new RuntimeException("NOT YET IMPLEMENTED");
+    }
+
     @Override
     public String toString() {
 

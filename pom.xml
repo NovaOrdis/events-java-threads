@@ -19,6 +19,7 @@
 
         <events.api.version>1.2.2-SNAPSHOT-20</events.api.version>
         <events.cli.version>1.0.2-SNAPSHOT-18</events.cli.version>
+        <events.java.memory.version>2.0.0-SNAPSHOT-1</events.java.memory.version>
 
         <slf4j.version>1.7.12</slf4j.version>
         <junit.version>4.12</junit.version>
@@ -42,6 +43,11 @@
     </modules>
 
     <dependencies>
+        <dependency>
+            <groupId>io.novaordis.events.java.memory</groupId>
+            <artifactId>events-java-memory</artifactId>
+            <version>${events.java.memory.version}</version>
+        </dependency>
         <dependency>
             <groupId>io.novaordis.events.api</groupId>
             <artifactId>events-api</artifactId>
