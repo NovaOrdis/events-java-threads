@@ -24,6 +24,8 @@ import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -643,6 +645,72 @@ public class StackTraceParserTest {
         assertEquals("0x421b", e.getNid());
         assertEquals(ThreadState.WAITING_FOR_MONITOR_ENTRY, e.getThreadState());
         assertEquals("0x00002aab56b65000", e.getMonitor());
+    }
+
+    @Test
+    public void parse_testFilteredFragment_NoCR() throws Exception {
+
+        File f = new File(System.getProperty("basedir"), "src/test/resources/samples/013_filtered_fragment_no_CR.txt");
+
+        assertTrue(f.isFile());
+
+        StackTraceParser p = new StackTraceParser();
+
+        List<Event> events = new ArrayList<>();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+        long lineNumber = 1;
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.flush());
+
+        br.close();
+
+        assertEquals(1, events.size());
+        StackTraceEvent e = (StackTraceEvent)events.get(0);
+        assertEquals("0x0000000051421000", e.getTid());
+        assertEquals("http-192.168.30.11-8080-1903", e.getThreadName());
+    }
+
+    @Test
+    public void parse_testFilteredFragment() throws Exception {
+
+        File f = new File(System.getProperty("basedir"), "src/test/resources/samples/014_filtered_fragment.txt");
+
+        assertTrue(f.isFile());
+
+        StackTraceParser p = new StackTraceParser();
+
+        List<Event> events = new ArrayList<>();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+        long lineNumber = 1;
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.flush());
+
+        br.close();
+
+        assertEquals(2, events.size());
+        StackTraceEvent e = (StackTraceEvent)events.get(0);
+        assertEquals("0x000000005208b800", e.getTid());
+        assertEquals("http-192.168.30.11-8080-2038", e.getThreadName());
+
+        StackTraceEvent e2 = (StackTraceEvent)events.get(1);
+        assertEquals("0x000000005078a800", e2.getTid());
+        assertEquals("http-192.168.30.11-8080-2035", e2.getThreadName());
     }
 
     // close() ---------------------------------------------------------------------------------------------------------

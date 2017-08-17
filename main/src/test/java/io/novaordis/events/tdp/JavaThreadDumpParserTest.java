@@ -681,169 +681,285 @@ public class JavaThreadDumpParserTest {
         MemorySnapshotEvent me = (MemorySnapshotEvent)events.get(1);
         assertNotNull(me);
     }
-//
-//    @Test
-//    public void testCtor_JustHeader() throws Exception {
-//
-//        ThreadDumpFile tdf = new ThreadDumpFile(
-//            "./src/test/resources/samples/011_thread_dump_header_no_timestamp.txt");
-//
-//        assertEquals(1, tdf.getCount());
-//
-//        ThreadDump td = tdf.get(0);
-//        assertNull(td.getTimestamp());
-//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b01 mixed mode):",
-//                     td.getHeader());
-//        assertEquals(2, td.getThreadCount());
-//    }
-//
-//    @Test
-//    public void testCtor_TwoThreadDumps() throws Exception {
-//
-//        ThreadDumpFile tdf =
-//            new ThreadDumpFile("./src/test/resources/samples/012_two_thread_dumps.txt");
-//
-//        assertEquals(2, tdf.getCount());
-//
-//        ThreadDump td = tdf.get(0);
-//        assertEquals(ThreadDumpFile.TIMESTAMP_FORMAT.parseObject("2010-12-14 01:02:03"),
-//                     td.getTimestamp());
-//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b05 mixed mode):",
-//                     td.getHeader());
-//        assertEquals(2, td.getThreadCount());
-//
-//        td = tdf.get(1);
-//        assertEquals(ThreadDumpFile.TIMESTAMP_FORMAT.parseObject("2011-01-02 03:04:05"),
-//                     td.getTimestamp());
-//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b11 mixed mode):",
-//                     td.getHeader());
-//        assertEquals(3, td.getThreadCount());
-//    }
-//
-//    @Test
-//    public void testCtor_FullThreadDumpOnFirstLine() throws Exception {
-//
-//        // this is NOT a fragment, but an incomplete thread dump
-//
-//        try {
-//
-//            new ThreadDumpFile("./src/test/resources/samples/002_1_FullThreadDumpOnFirstLine.txt");
-//            fail("should have failed with UserErrorException");
-//        }
-//        catch(ParsingException e) {
-//
-//            log.info(e.getMessage());
-//            assertEquals(1, e.getLineNumber().longValue());
-//        }
-//    }
-//
-//    @Test
-//    public void testCtor_FullThreadDumpOnFirstLine_2() throws Exception {
-//
-//        ThreadDumpFile tdf =
-//            new ThreadDumpFile("./src/test/resources/samples/002_2_FullThreadDumpOnFirstLine.txt");
-//
-//        assertEquals(1, tdf.getCount());
-//        ThreadDump td = tdf.get(0);
-//
-//        assertNull(td.getTimestamp());
-//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b71 mixed mode):",
-//                     td.getHeader());
-//
-//        assertEquals(2, td.getThreadCount());
-//    }
-//
-//    @Test
-//    public void testCtor_FullThreadDumpOnInvalidTimestamp() throws Exception {
-//
-//        // this is NOT a fragment, but an incomplete thread dump
-//
-//        try {
-//
-//            new ThreadDumpFile("./src/test/resources/samples/003_FullThreadDumpInvalidTimestamp.txt");
-//            fail("should have failed with UserErrorException");
-//        }
-//        catch(ParsingException e) {
-//
-//            log.info(e.getMessage());
-//            assertEquals(5, e.getLineNumber().longValue());
-//        }
-//    }
-//
-//    @Test
-//    public void testCtor_NoEmptyLineAfterHeader() throws Exception {
-//
-//        try {
-//
-//            new ThreadDumpFile("./src/test/resources/samples/005_NoEmptyLine.txt");
-//            fail("should have failed with UserErrorException");
-//        }
-//        catch(ParsingException e) {
-//
-//            log.info(e.getMessage());
-//            assertEquals(9, e.getLineNumber().longValue());
-//        }
-//    }
-//
-//    @Test
-//    public void testCtor_Minimal() throws Exception {
-//
-//        ThreadDumpFile tdf = new ThreadDumpFile("./src/test/resources/samples/004_Minimal.txt");
-//
-//        assertEquals(1, tdf.getCount());
-//        ThreadDump td = tdf.get(0);
-//
-//        assertEquals(ThreadDumpFile.TIMESTAMP_FORMAT.parseObject("2011-09-09 15:16:17"),
-//                     td.getTimestamp());
-//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (15.3-b01 mixed mode):",
-//                     td.getHeader());
-//        assertEquals(2, td.getThreadCount());
-//    }
-//
-//    @Test
-//    public void testCtor_Real_001() throws Exception {
-//
-//        ThreadDumpFile tdf = new ThreadDumpFile("./src/test/resources/samples/001.txt");
-//
-//        assertEquals(1, tdf.getCount());
-//        ThreadDump td = tdf.get(0);
-//
-//        assertEquals(ThreadDumpFile.TIMESTAMP_FORMAT.parseObject("2011-10-04 00:09:02"),
-//                     td.getTimestamp());
-//
-//        assertEquals("Full thread dump Java HotSpot(TM) 64-Bit Server VM (16.3-b01 mixed mode):",
-//                     td.getHeader());
-//
-//        assertEquals(786, td.getThreadCount());
-//    }
-//
-//    @Test
-//    public void testFilteredFragment_NoCR() throws Exception {
-//
-//        ThreadDumpFile tdf =
-//            new ThreadDumpFile("./src/test/resources/samples/013_filtered_fragment_no_CR.txt");
-//
-//        assertEquals(1, tdf.getCount());
-//        ThreadDump td = tdf.get(0);
-//
-//        assertNull(td.getTimestamp());
-//        assertNull(td.getHeader());
-//        assertEquals(1, td.getThreadCount());
-//    }
-//
-//    @Test
-//    public void testFilteredFragment() throws Exception {
-//
-//        ThreadDumpFile tdf =
-//            new ThreadDumpFile("./src/test/resources/samples/014_filtered_fragment.txt");
-//
-//        assertEquals(1, tdf.getCount());
-//        ThreadDump td = tdf.get(0);
-//
-//        assertNull(td.getTimestamp());
-//        assertNull(td.getHeader());
-//        assertEquals(2, td.getThreadCount());
-//    }
+
+    @Test
+    public void parse_JustHeader_NoTimestamp() throws Exception {
+
+        File f = new File(System.getProperty("basedir"),
+                "src/test/resources/samples/011_thread_dump_header_no_timestamp.txt");
+
+        assertTrue(f.isFile());
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        List<Event> events = new ArrayList<>();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+        long lineNumber = 1;
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close(lineNumber));
+
+        br.close();
+
+        //
+        // we're currently skipping the thread dump, as there is no timestamp, we catch the memory dump though
+        //
+
+        assertEquals(1, events.size());
+
+        MemorySnapshotEvent e = (MemorySnapshotEvent)events.get(0);
+        assertNotNull(e);
+    }
+
+    @Test
+    public void parse_TwoThreadDumps() throws Exception {
+
+        File f = new File(System.getProperty("basedir"), "src/test/resources/samples/012_two_thread_dumps.txt");
+
+        assertTrue(f.isFile());
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        List<Event> events = new ArrayList<>();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+        long lineNumber = 1;
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close(lineNumber));
+
+        br.close();
+
+        assertEquals(4, events.size());
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+
+        assertEquals(JavaThreadDumpParser.THREAD_DUMP_TIMESTAMP_FORMATS[0].parse("2010-12-14 01:02:03").getTime(),
+                e.getTime().longValue());
+
+        assertEquals(2, e.getThreadCount());
+
+        MemorySnapshotEvent e2 = (MemorySnapshotEvent)events.get(1);
+        assertNotNull(e2);
+
+        JavaThreadDumpEvent e3 = (JavaThreadDumpEvent)events.get(2);
+
+        assertEquals(JavaThreadDumpParser.THREAD_DUMP_TIMESTAMP_FORMATS[0].parse("2011-01-02 03:04:05").getTime(),
+                e3.getTime().longValue());
+
+        assertEquals(3, e3.getThreadCount());
+
+        MemorySnapshotEvent e4 = (MemorySnapshotEvent)events.get(3);
+        assertNotNull(e4);
+    }
+
+    @Test
+    public void parse_FullThreadDumpOnFirstLine() throws Exception {
+
+        // this is NOT a fragment, but an incomplete thread dump
+
+        File f = new File(System.getProperty("basedir"),
+                "src/test/resources/samples/002_1_FullThreadDumpOnFirstLine.txt");
+
+        assertTrue(f.isFile());
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        List<Event> events = new ArrayList<>();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+        long lineNumber = 1;
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close(lineNumber));
+
+        br.close();
+
+        assertEquals(0, events.size());
+    }
+
+    @Test
+    public void parse_FullThreadDumpOnFirstLine_2() throws Exception {
+
+        File f = new File(System.getProperty("basedir"),
+                "src/test/resources/samples/002_2_FullThreadDumpOnFirstLine.txt");
+
+        assertTrue(f.isFile());
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        List<Event> events = new ArrayList<>();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+        long lineNumber = 1;
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close(lineNumber));
+
+        br.close();
+
+        assertEquals(0, events.size());
+    }
+
+    @Test
+    public void parse_FullThreadDumpOnInvalidTimestamp() throws Exception {
+
+        // this is NOT a fragment, but an incomplete thread dump
+
+        File f = new File(System.getProperty("basedir"),
+                "src/test/resources/samples/003_FullThreadDumpInvalidTimestamp.txt");
+
+        assertTrue(f.isFile());
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        List<Event> events = new ArrayList<>();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+        long lineNumber = 1;
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close(lineNumber));
+
+        br.close();
+
+        assertEquals(0, events.size());
+    }
+
+    @Test
+    public void parse_NoEmptyLineAfterHeader() throws Exception {
+
+        File f = new File(System.getProperty("basedir"), "src/test/resources/samples/005_NoEmptyLine.txt");
+
+        assertTrue(f.isFile());
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        List<Event> events = new ArrayList<>();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+        long lineNumber = 1;
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close(lineNumber));
+
+        br.close();
+
+        assertEquals(0, events.size());
+    }
+
+    @Test
+    public void parse_Minimal() throws Exception {
+
+        File f = new File(System.getProperty("basedir"), "src/test/resources/samples/004_Minimal.txt");
+
+        assertTrue(f.isFile());
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        List<Event> events = new ArrayList<>();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+        long lineNumber = 1;
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close(lineNumber));
+
+        br.close();
+
+        assertEquals(2, events.size());
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+
+        assertEquals(JavaThreadDumpParser.THREAD_DUMP_TIMESTAMP_FORMATS[0].parse("2011-09-09 15:16:17").getTime(),
+                e.getTime().longValue());
+
+        assertEquals(2, e.getThreadCount());
+
+        MemorySnapshotEvent e2 = (MemorySnapshotEvent)events.get(1);
+        assertNotNull(e2);
+    }
+
+    @Test
+    public void parse_Real_001() throws Exception {
+
+        File f = new File(System.getProperty("basedir"), "src/test/resources/samples/001.txt");
+
+        assertTrue(f.isFile());
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        List<Event> events = new ArrayList<>();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+        long lineNumber = 1;
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close(lineNumber));
+
+        br.close();
+
+        assertEquals(2, events.size());
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+
+        assertEquals(JavaThreadDumpParser.THREAD_DUMP_TIMESTAMP_FORMATS[0].parse("2011-10-04 00:09:02").getTime(),
+                e.getTime().longValue());
+
+        assertEquals(786, e.getThreadCount());
+
+        MemorySnapshotEvent e2 = (MemorySnapshotEvent)events.get(1);
+        assertNotNull(e2);
+    }
 
     // Package protected -----------------------------------------------------------------------------------------------
 
