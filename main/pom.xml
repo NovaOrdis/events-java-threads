@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.novaordis.events.tdp</groupId>
-        <artifactId>events-tdp-root</artifactId>
+        <groupId>io.novaordis.events.java.threads</groupId>
+        <artifactId>events-java-threads-root</artifactId>
         <version>1.0.4-SNAPSHOT-13</version>
     </parent>
 
-    <artifactId>events-tdp</artifactId>
+    <artifactId>events-java-threads</artifactId>
     <packaging>jar</packaging>
 
     <build>

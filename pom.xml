@@ -6,8 +6,8 @@
 
     <name>Events Java Thread Dump Parser</name>
 
-    <groupId>io.novaordis.events.tdp</groupId>
-    <artifactId>events-tdp-root</artifactId>
+    <groupId>io.novaordis.events.java.threads</groupId>
+    <artifactId>events-java-threads-root</artifactId>
     <version>1.0.4-SNAPSHOT-13</version>
     <packaging>pom</packaging>
 
