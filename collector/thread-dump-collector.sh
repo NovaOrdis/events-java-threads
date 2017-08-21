@@ -3,7 +3,7 @@
 #
 # see help() below
 #
-VERSION=7
+VERSION=8
 
 #
 # configuration
@@ -58,6 +58,8 @@ but otherwise results of successive readings will accumulate in the same files. 
 expects to find  JAVA_HOME set to the correct value, and it will used JAVA_HOME to locate
 the jstack binary in \$JAVA_HOME/bin. However, the script can be configured to use a custom
 Java home directory by using command line argument --java-home=.
+
+The script also collects disk space statistics.
 
 A failure to take a thread dump on the Java process does not interrupt the main loop. Failure
 details are logged in the thread dump and log files instead. For this reason, it is best if
@@ -217,6 +219,7 @@ function jstack-and-top-snapshot() {
 
     local thread_dump_file_name="${output_filename_prefix}-jstack.out"
     local top_output_file_name="${output_filename_prefix}-top.out"
+    local disk_space_output_file_name="${output_filename_prefix%-*}-disk-space.out"
 
     echo "${timestamp}" >> ${output_dir}/${thread_dump_file_name}
 
@@ -229,6 +232,10 @@ function jstack-and-top-snapshot() {
     echo "${timestamp}" >> ${output_dir}/${top_output_file_name}
     residual_output=$(top -b -n 1 -H -p ${pid} 2>&1 >> ${output_dir}/${top_output_file_name})
     [ -n "${residual_output}" ] && echo "${residual_output}" >>  ${output_dir}/${top_output_file_name}
+
+    echo "${timestamp}" >> ${output_dir}/${disk_space_output_file_name}
+    residual_output=$(df -h 2>&1 >> ${output_dir}/${disk_space_output_file_name})
+    [ -n "${residual_output}" ] && echo "${residual_output}" >>  ${output_dir}/${disk_space_output_file_name}
 
     return 0
 }
