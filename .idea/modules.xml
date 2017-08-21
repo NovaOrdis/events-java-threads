@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/main/events-java-threads.iml" filepath="$PROJECT_DIR$/main/events-java-threads.iml" />
+      <module fileurl="file://$PROJECT_DIR$/release/events-java-threads-release.iml" filepath="$PROJECT_DIR$/release/events-java-threads-release.iml" />
+      <module fileurl="file://$PROJECT_DIR$/events-java-threads-root.iml" filepath="$PROJECT_DIR$/events-java-threads-root.iml" />
+    </modules>
+  </component>
+</project>
