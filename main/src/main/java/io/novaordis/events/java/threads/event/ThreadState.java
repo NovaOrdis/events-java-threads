@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.novaordis.events.tdp.event;
+package io.novaordis.events.java.threads.event;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>

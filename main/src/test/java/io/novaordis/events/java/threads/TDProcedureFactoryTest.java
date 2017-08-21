@@ -14,56 +14,40 @@
  * limitations under the License.
  */
 
-package io.novaordis.events.tdp.cli;
+package io.novaordis.events.java.threads;
 
-import io.novaordis.events.tdp.TDProcedureFactory;
-import io.novaordis.events.api.parser.Parser;
-import io.novaordis.events.cli.EventParserRuntime;
-import io.novaordis.events.processing.ProcedureFactory;
-import io.novaordis.events.tdp.JavaThreadDumpParser;
-import io.novaordis.utilities.UserErrorException;
+import io.novaordis.events.java.threads.TDProcedureFactory;
+import org.junit.Test;
+
+import java.util.Collections;
+
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
  * @since 8/14/17
  */
-public class Main {
+public class TDProcedureFactoryTest {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
-    public static final String APPLICATION_NAME = "td";
-
     // Static ----------------------------------------------------------------------------------------------------------
-
-    public static void main(String[] args) throws Exception {
-
-        try {
-
-            Parser parser = new JavaThreadDumpParser();
-
-            ProcedureFactory procedureFactory = new TDProcedureFactory();
-
-            EventParserRuntime runtime = new EventParserRuntime(args, APPLICATION_NAME, procedureFactory, parser);
-
-            if (runtime.getConfiguration().isHelp()) {
-
-                runtime.displayHelp(APPLICATION_NAME);
-                return;
-            }
-
-            runtime.run();
-
-        } catch (UserErrorException e) {
-
-            System.err.println(e.getMessage());
-        }
-    }
 
     // Attributes ------------------------------------------------------------------------------------------------------
 
     // Constructors ----------------------------------------------------------------------------------------------------
 
     // Public ----------------------------------------------------------------------------------------------------------
+
+    // Tests -----------------------------------------------------------------------------------------------------------
+
+    @Test
+    public void find_NoSuchProcedure() throws Exception {
+
+        TDProcedureFactory f = new TDProcedureFactory();
+
+        assertNull(f.find("I-am-sure-there-is-no-such-procedure", 0, Collections.emptyList()));
+    }
 
     // Package protected -----------------------------------------------------------------------------------------------
 

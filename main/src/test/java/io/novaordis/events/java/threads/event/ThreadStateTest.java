@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package io.novaordis.events.tdp.event;
+package io.novaordis.events.java.threads.event;
 
+import io.novaordis.events.java.threads.event.StackTraceEvent;
+import io.novaordis.events.java.threads.event.ThreadState;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

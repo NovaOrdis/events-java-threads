@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-package io.novaordis.events.tdp;
+package io.novaordis.events.java.threads.event;
 
-import org.junit.Test;
-
-import java.util.Collections;
-
-import static org.junit.Assert.assertNull;
+import io.novaordis.events.api.event.GenericEvent;
+import io.novaordis.events.java.memory.MemoryEvent;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
- * @since 8/14/17
+ * @since 8/16/17
  */
-public class TDProcedureFactoryTest {
+public class MemorySnapshotEvent extends GenericEvent implements MemoryEvent {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
@@ -38,14 +35,11 @@ public class TDProcedureFactoryTest {
 
     // Public ----------------------------------------------------------------------------------------------------------
 
-    // Tests -----------------------------------------------------------------------------------------------------------
+    public void parse(String line) {
 
-    @Test
-    public void find_NoSuchProcedure() throws Exception {
-
-        TDProcedureFactory f = new TDProcedureFactory();
-
-        assertNull(f.find("I-am-sure-there-is-no-such-procedure", 0, Collections.emptyList()));
+        //
+        // noop for the time being
+        //
     }
 
     // Package protected -----------------------------------------------------------------------------------------------

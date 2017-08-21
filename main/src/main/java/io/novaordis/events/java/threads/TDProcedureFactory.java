@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package io.novaordis.events.tdp.event;
+package io.novaordis.events.java.threads;
 
-import io.novaordis.events.api.event.GenericEvent;
-import io.novaordis.events.java.memory.MemoryEvent;
+import io.novaordis.events.processing.Procedure;
+import io.novaordis.events.processing.ProcedureFactory;
+
+import java.util.List;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
- * @since 8/16/17
+ * @since 8/14/17
  */
-public class MemorySnapshotEvent extends GenericEvent implements MemoryEvent {
+public class TDProcedureFactory implements ProcedureFactory {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
@@ -33,14 +35,15 @@ public class MemorySnapshotEvent extends GenericEvent implements MemoryEvent {
 
     // Constructors ----------------------------------------------------------------------------------------------------
 
-    // Public ----------------------------------------------------------------------------------------------------------
+    // ProcedureFactory ------------------------------------------------------------------------------------------------
 
-    public void parse(String line) {
+    @Override
+    public Procedure find(String commandLineLabel, int from, List<String> arguments) {
 
-        //
-        // noop for the time being
-        //
+        return null;
     }
+
+    // Public ----------------------------------------------------------------------------------------------------------
 
     // Package protected -----------------------------------------------------------------------------------------------
 

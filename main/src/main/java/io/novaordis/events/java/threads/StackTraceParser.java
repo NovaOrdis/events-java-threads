@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.novaordis.events.tdp;
+package io.novaordis.events.java.threads;
 
 import io.novaordis.events.api.event.Event;
 import io.novaordis.events.api.parser.ParserBase;
 import io.novaordis.events.api.parser.ParsingException;
-import io.novaordis.events.tdp.event.StackTraceEvent;
+import io.novaordis.events.java.threads.event.StackTraceEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

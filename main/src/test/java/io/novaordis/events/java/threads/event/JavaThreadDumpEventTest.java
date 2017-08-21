@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package io.novaordis.events.tdp.event;
+package io.novaordis.events.java.threads.event;
 
 import io.novaordis.events.api.event.EndOfStreamEvent;
 import io.novaordis.events.api.event.Event;
+import io.novaordis.events.java.threads.event.JavaThreadDumpEvent;
+import io.novaordis.events.java.threads.event.StackTraceEvent;
 import org.junit.Test;
 
 import java.util.ArrayList;

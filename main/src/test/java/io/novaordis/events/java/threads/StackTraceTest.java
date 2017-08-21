@@ -1,4 +1,4 @@
-package io.novaordis.events.tdp;
+package io.novaordis.events.java.threads;
 
 import io.novaordis.events.api.event.Event;
 import org.junit.Test;

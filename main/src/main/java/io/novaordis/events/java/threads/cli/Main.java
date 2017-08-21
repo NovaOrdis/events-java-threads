@@ -14,34 +14,54 @@
  * limitations under the License.
  */
 
-package io.novaordis.events.tdp;
+package io.novaordis.events.java.threads.cli;
 
-import io.novaordis.events.processing.Procedure;
+import io.novaordis.events.api.parser.Parser;
+import io.novaordis.events.cli.EventParserRuntime;
 import io.novaordis.events.processing.ProcedureFactory;
-
-import java.util.List;
+import io.novaordis.utilities.UserErrorException;
+import io.novaordis.events.java.threads.TDProcedureFactory;
+import io.novaordis.events.java.threads.JavaThreadDumpParser;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
  * @since 8/14/17
  */
-public class TDProcedureFactory implements ProcedureFactory {
+public class Main {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
+    public static final String APPLICATION_NAME = "td";
+
     // Static ----------------------------------------------------------------------------------------------------------
+
+    public static void main(String[] args) throws Exception {
+
+        try {
+
+            Parser parser = new JavaThreadDumpParser();
+
+            ProcedureFactory procedureFactory = new TDProcedureFactory();
+
+            EventParserRuntime runtime = new EventParserRuntime(args, APPLICATION_NAME, procedureFactory, parser);
+
+            if (runtime.getConfiguration().isHelp()) {
+
+                runtime.displayHelp(APPLICATION_NAME);
+                return;
+            }
+
+            runtime.run();
+
+        } catch (UserErrorException e) {
+
+            System.err.println(e.getMessage());
+        }
+    }
 
     // Attributes ------------------------------------------------------------------------------------------------------
 
     // Constructors ----------------------------------------------------------------------------------------------------
-
-    // ProcedureFactory ------------------------------------------------------------------------------------------------
-
-    @Override
-    public Procedure find(String commandLineLabel, int from, List<String> arguments) {
-
-        return null;
-    }
 
     // Public ----------------------------------------------------------------------------------------------------------
 
