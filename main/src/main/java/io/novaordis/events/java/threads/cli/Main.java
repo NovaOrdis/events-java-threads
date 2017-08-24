@@ -47,7 +47,7 @@ public class Main {
 
             if (runtime.getConfiguration().isHelp()) {
 
-                runtime.displayHelp(APPLICATION_NAME);
+                runtime.displayHelp(APPLICATION_NAME, System.out);
                 return;
             }
 
