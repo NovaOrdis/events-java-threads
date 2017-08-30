@@ -8,7 +8,7 @@
 
     <groupId>io.novaordis.events.java.threads</groupId>
     <artifactId>events-java-threads-root</artifactId>
-    <version>2.0.0-SNAPSHOT-2</version>
+    <version>2.0.0-SNAPSHOT-3</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -18,8 +18,8 @@
         -->
 
         <events.api.version>1.2.2-SNAPSHOT-21</events.api.version>
-        <events.cli.version>1.0.2-SNAPSHOT-19</events.cli.version>
-        <events.java.memory.version>2.0.0-SNAPSHOT-2</events.java.memory.version>
+        <events.cli.version>1.0.2-SNAPSHOT-20</events.cli.version>
+        <events.java.memory.version>2.0.0-SNAPSHOT-3</events.java.memory.version>
 
         <slf4j.version>1.7.12</slf4j.version>
         <junit.version>4.12</junit.version>
