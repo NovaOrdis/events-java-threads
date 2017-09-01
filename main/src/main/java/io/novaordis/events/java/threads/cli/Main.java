@@ -22,6 +22,7 @@ import io.novaordis.events.processing.ProcedureFactory;
 import io.novaordis.utilities.UserErrorException;
 import io.novaordis.events.java.threads.TDProcedureFactory;
 import io.novaordis.events.java.threads.JavaThreadDumpParser;
+import io.novaordis.utilities.appspec.ApplicationSpecificBehavior;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
@@ -43,7 +44,9 @@ public class Main {
 
             ProcedureFactory procedureFactory = new TDProcedureFactory();
 
-            EventParserRuntime runtime = new EventParserRuntime(args, APPLICATION_NAME, procedureFactory, parser);
+            ApplicationSpecificBehavior b = new ApplicationSpecificBehavior(parser, procedureFactory);
+
+            EventParserRuntime runtime = new EventParserRuntime(args, APPLICATION_NAME, b);
 
             if (runtime.getConfiguration().isHelp()) {
 
