@@ -289,9 +289,17 @@ public class JavaThreadDumpParser extends ParserBase {
                     // lines in a valid thread dump file, so we make it visible and warn
                     //
 
-                    log.warn("discarding line " + lineNumber + ": " + line);
+                    //
+                    // if it is not blank, warn
+                    //
+
+                    if (!line.trim().isEmpty()) {
+
+                        log.warn("discarding line " + lineNumber + ": " + line);
+                    }
                 }
-                else {
+                else
+                {
 
                     //
                     // engage the stack trace parser and identify individual stack traces
