@@ -16,20 +16,22 @@
 
 package io.novaordis.events.java.threads.event;
 
-import io.novaordis.events.api.event.Event;
-import io.novaordis.events.api.event.EventProperty;
-import io.novaordis.events.api.event.GenericTimedEvent;
-import io.novaordis.events.api.event.Property;
-import io.novaordis.utilities.time.TimestampImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.novaordis.events.api.event.Event;
+import io.novaordis.events.api.event.EventProperty;
+import io.novaordis.events.api.event.GenericTimedEvent;
+import io.novaordis.events.api.event.Property;
+import io.novaordis.events.api.event.StringProperty;
+import io.novaordis.utilities.time.TimestampImpl;
 
 /**
  * An individual thread dump, containing the snapshots of all threads in the JVM at a certain moment in time. A log
@@ -46,6 +48,13 @@ public class JavaThreadDumpEvent extends GenericTimedEvent {
     private static final Logger log = LoggerFactory.getLogger(JavaThreadDumpEvent.class);
 
     private static final DateFormat TIMESTAMP_DISPLAY_FORMAT = new SimpleDateFormat("MM/dd/yy HH:mm:ss");
+
+    /**
+     * The raw representation at this level is carried in two components: the usual RAW_PROPERTY_NAME property, for
+     * anything that comes before the stack traces, and RAW_EPILOGUE_PROPERTY_NAME property for anything that comes
+     * after the stack traces. This is necessary so we can reassemble the full raw representation in the correct order.
+     */
+    public static final String RAW_EPILOGUE_PROPERTY_NAME = "raw-epilogue";
 
     // Static ----------------------------------------------------------------------------------------------------------
 
@@ -66,6 +75,35 @@ public class JavaThreadDumpEvent extends GenericTimedEvent {
         setTimestamp(new TimestampImpl(timestamp));
 
         log.debug(this + " constructed");
+    }
+
+    // Overrides -------------------------------------------------------------------------------------------------------
+
+    /**
+     * We need to override the method because JavaThreadDumpEvent maintains its raw representation split between itself
+     * and its component StackTraceEvents.
+     */
+    @Override
+    public String getRawRepresentation() {
+
+        String s = super.getRawRepresentation();
+
+        for(StackTraceEvent se: getStackTraceEvents()) {
+
+            s += "\n";
+            s += se.getRawRepresentation();
+        }
+
+        StringProperty ep = getStringProperty(RAW_EPILOGUE_PROPERTY_NAME);
+        String epilogue;
+
+        if (ep != null && (epilogue = ep.getString()) != null) {
+
+            s += "\n";
+            s += epilogue;
+        }
+
+        return s;
     }
 
     // Public ----------------------------------------------------------------------------------------------------------

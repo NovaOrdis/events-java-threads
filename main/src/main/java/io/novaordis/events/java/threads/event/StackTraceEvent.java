@@ -16,12 +16,13 @@
 
 package io.novaordis.events.java.threads.event;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.novaordis.events.api.event.BooleanProperty;
 import io.novaordis.events.api.event.GenericEvent;
 import io.novaordis.events.api.event.IntegerProperty;
 import io.novaordis.events.api.event.StringProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
@@ -365,36 +366,6 @@ public class StackTraceEvent extends GenericEvent {
     public void setObjectWaitMonitor(String s) {
 
         setStringProperty(OBJECT_WAIT_MONITOR_PROPERTY_NAME, s);
-    }
-
-    public void appendToRawRepresentation(Long lineNumber, String line) {
-
-        String raw = null;
-
-        StringProperty sp = getStringProperty(RAW_PROPERTY_NAME);
-
-        if (sp != null) {
-
-            raw = sp.getString();
-        }
-
-        if (raw == null) {
-
-            raw = line;
-        }
-        else {
-
-            raw += line;
-        }
-
-        raw += "\n";
-
-        setStringProperty(RAW_PROPERTY_NAME, raw);
-
-        if (log.isDebugEnabled()) {
-
-            log.debug("line " + lineNumber + " appended to the raw representation of " + this);
-        }
     }
 
     @Override

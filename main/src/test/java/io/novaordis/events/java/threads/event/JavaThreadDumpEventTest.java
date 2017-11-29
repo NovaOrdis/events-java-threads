@@ -22,6 +22,7 @@ import java.io.FileReader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import org.junit.Test;
 
@@ -186,7 +187,87 @@ public class JavaThreadDumpEventTest {
 
     // getRawRepresentation() ------------------------------------------------------------------------------------------
 
-    //@Test
+    @Test
+    public void getRawRepresentation_Synthetic() throws Exception {
+
+        JavaThreadDumpEvent e = new JavaThreadDumpEvent(7L, 1L);
+        e.appendRawLine("something that simulates a thread dump header");
+        assertNull(e.getStringProperty(JavaThreadDumpEvent.RAW_EPILOGUE_PROPERTY_NAME));
+
+        StackTraceEvent t = new StackTraceEvent(17L);
+        t.appendRawLine("stack trace header");
+        t.appendRawLine("stack trace extra line");
+        e.addStackTrace(t);
+
+        String rawRepresentation = e.getRawRepresentation();
+
+        String expected =
+                "something that simulates a thread dump header\n" +
+                        "stack trace header\n" +
+                        "stack trace extra line";
+
+        assertEquals(expected, rawRepresentation);
+    }
+
+    @Test
+    public void getRawRepresentation_Synthetic_WithEpilogue() throws Exception {
+
+        JavaThreadDumpEvent e = new JavaThreadDumpEvent(7L, 1L);
+        e.appendRawLine("something that simulates a thread dump header");
+        e.setStringProperty(JavaThreadDumpEvent.RAW_EPILOGUE_PROPERTY_NAME, "something that simulates an epilogue");
+
+        StackTraceEvent t = new StackTraceEvent(17L);
+        t.appendRawLine("stack trace header");
+        t.appendRawLine("stack trace extra line");
+        e.addStackTrace(t);
+
+        String rawRepresentation = e.getRawRepresentation();
+
+        String expected =
+                "something that simulates a thread dump header\n" +
+                        "stack trace header\n" +
+                        "stack trace extra line\n" +
+                        "something that simulates an epilogue";
+
+        assertEquals(expected, rawRepresentation);
+    }
+
+    @Test
+    public void getRawRepresentation_Synthetic_MultipleStackTraces() throws Exception {
+
+        JavaThreadDumpEvent e = new JavaThreadDumpEvent(7L, 1L);
+        e.appendRawLine("something that simulates a thread dump header");
+
+        StackTraceEvent t = new StackTraceEvent(17L);
+        t.appendRawLine("h1");
+        t.appendRawLine("el1");
+        e.addStackTrace(t);
+
+        StackTraceEvent t2 = new StackTraceEvent(18L);
+        t2.appendRawLine("h2");
+        t2.appendRawLine("el2");
+        e.addStackTrace(t2);
+
+        StackTraceEvent t3 = new StackTraceEvent(19L);
+        t3.appendRawLine("h3");
+        t3.appendRawLine("el3");
+        e.addStackTrace(t3);
+
+        String rawRepresentation = e.getRawRepresentation();
+
+        String expected =
+                "something that simulates a thread dump header\n" +
+                        "h1\n" +
+                        "el1\n" +
+                        "h2\n" +
+                        "el2\n" +
+                        "h3\n" +
+                        "el3";
+
+        assertEquals(expected, rawRepresentation);
+    }
+
+    @Test
     public void getRawRepresentation_MustBeIdenticalWithOriginalContent() throws Exception {
 
         File f = new File(System.getProperty("basedir"), "src/test/resources/samples/016_raw_representation.txt");
@@ -214,7 +295,103 @@ public class JavaThreadDumpEventTest {
 
         String rawRepresentation = e.getRawRepresentation();
 
-        assertEquals(originalContent, rawRepresentation);
+        //
+        // compare it line by line to make easier to spot the differences
+        //
+
+        StringTokenizer orig = new StringTokenizer(originalContent, "\n");
+        StringTokenizer raw = new StringTokenizer(rawRepresentation, "\n");
+        int lineNumber = 1;
+
+        while (orig.hasMoreTokens()) {
+
+            if (!raw.hasMoreTokens()) {
+
+                fail("the original content has more lines than the processed raw content, line " + lineNumber);
+            }
+
+            String origLine = orig.nextToken();
+            String rawLine = raw.nextToken();
+
+            if (!origLine.equals(rawLine)) {
+
+                fail("lines " + lineNumber + " differ, original:\n>" + origLine + "<\n, raw:\n>" + rawLine + "<\n");
+            }
+
+            lineNumber ++;
+        }
+
+        if (raw.hasMoreTokens()) {
+
+            fail("the proceesed raw content has more lines than the original content, line " + lineNumber);
+        }
+    }
+
+    @Test
+    public void getRawRepresentation_MustBeIdenticalWithOriginalContent_FirstLineContainsSpaces() throws Exception {
+
+        File f = new File(System.getProperty("basedir"),
+                "src/test/resources/samples/017_raw_representation_first_line_contains_spaces.txt");
+
+        assertTrue(f.isFile());
+
+        String originalContent = new String(Files.readAllBytes(f.toPath()));
+
+        // make sure that the first line contains spaces
+        int i = originalContent.indexOf('\n');
+        assertTrue(i != -1);
+        String firstLine = originalContent.substring(0, i);
+        assertTrue(firstLine.length() != firstLine.trim().length());
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        while((line = br.readLine()) != null) {
+
+            events.addAll(p.parse(line));
+        }
+
+        br.close();
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+
+        String rawRepresentation = e.getRawRepresentation();
+
+        //
+        // compare it line by line to make easier to spot the differences
+        //
+
+        StringTokenizer orig = new StringTokenizer(originalContent, "\n");
+        StringTokenizer raw = new StringTokenizer(rawRepresentation, "\n");
+        int lineNumber = 1;
+
+        while (orig.hasMoreTokens()) {
+
+            if (!raw.hasMoreTokens()) {
+
+                fail("the original content has more lines than the processed raw content, line " + lineNumber);
+            }
+
+            String origLine = orig.nextToken();
+            String rawLine = raw.nextToken();
+
+            if (!origLine.equals(rawLine)) {
+
+                fail("lines " + lineNumber + " differ, original:\n>" + origLine + "<\n, raw:\n>" + rawLine + "<\n");
+            }
+
+            lineNumber ++;
+        }
+
+        if (raw.hasMoreTokens()) {
+
+            fail("the proceesed raw content has more lines than the original content, line " + lineNumber);
+        }
     }
 
     // Package protected -----------------------------------------------------------------------------------------------

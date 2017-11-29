@@ -16,13 +16,6 @@
 
 package io.novaordis.events.java.threads;
 
-import io.novaordis.events.api.event.EndOfStreamEvent;
-import io.novaordis.events.api.event.Event;
-import io.novaordis.events.java.threads.StackTraceParser;
-import io.novaordis.events.java.threads.event.StackTraceEvent;
-import io.novaordis.events.java.threads.event.ThreadState;
-import org.junit.Test;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -30,6 +23,13 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.junit.Test;
+
+import io.novaordis.events.api.event.EndOfStreamEvent;
+import io.novaordis.events.api.event.Event;
+import io.novaordis.events.java.threads.event.StackTraceEvent;
+import io.novaordis.events.java.threads.event.ThreadState;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -60,12 +60,60 @@ public class StackTraceParserTest {
     public void parse_simplestSyntheticStackTrace() throws Exception {
 
         String content =
-                "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n" +
-                        "\n";
+                "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n";
+
+        String contentWithExtraLineSoTheLoopReturnsEmptyLines = content + "\n";
 
         StackTraceParser p = new StackTraceParser();
 
-        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+                new ByteArrayInputStream(contentWithExtraLineSoTheLoopReturnsEmptyLines.getBytes())));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        long lineNumber = 1;
+
+        for(; (line = br.readLine()) != null; lineNumber ++) {
+
+            List<Event> es = p.parse(lineNumber, line);
+            events.addAll(es);
+        }
+
+        List<Event> es = p.close(lineNumber);
+        events.addAll(es);
+
+        br.close();
+
+        assertEquals(1, events.size());
+
+        StackTraceEvent e = (StackTraceEvent)events.get(0);
+
+        assertEquals("GC task thread#0 (ParallelGC)", e.getThreadName());
+        assertEquals(0, e.getOsPrio().intValue());
+        assertEquals(StackTraceEvent.longFromHexString("0x00007f6220025000"), e.getTidAsLong().longValue());
+        assertEquals("0x00007f6220025000", e.getTid());
+        assertEquals("0x1829", e.getNid());
+        assertEquals(ThreadState.RUNNABLE, e.getThreadState());
+
+        String raw = e.getRawRepresentation();
+        assertEquals(content, raw);
+    }
+
+    @Test
+    public void parse_simplestSyntheticStackTrace_MultipleEmptyLines() throws Exception {
+
+        String content =
+                "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n" +
+                        "\n";
+
+        String contentWithExtraLineSoTheLoopReturnsEmptyLines = content + "\n";
+
+        StackTraceParser p = new StackTraceParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+                new ByteArrayInputStream(contentWithExtraLineSoTheLoopReturnsEmptyLines.getBytes())));
 
         String line;
 
@@ -108,11 +156,11 @@ public class StackTraceParserTest {
 
         String line1 = "\"GC task thread#0 (ParallelGC)\" os_prio=? tid=0x00007f6220025000 nid=0x1829 runnable\n";
         String line2 = "this line does not matter\n";
-        String line3 = "\n";
+        String terminator1 = "\n";
         String line4 = "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0x00007f6220026800 nid=0x182a runnable\n";
-        String line5 = "\n";
+        String terminator2 = "\n";
 
-        String content = line1 + line2 + line3 + line4 + line5;
+        String content = line1 + line2 + terminator1 + line4 + terminator2;
 
         StackTraceParser p = new StackTraceParser();
 
@@ -142,7 +190,7 @@ public class StackTraceParserTest {
         assertEquals("GC task thread#1 (ParallelGC)", e.getThreadName());
 
         String raw = e.getRawRepresentation();
-        assertEquals(line4 + line5, raw);
+        assertEquals(line4, raw);
     }
 
     /**
@@ -153,13 +201,13 @@ public class StackTraceParserTest {
             throws Exception {
 
         String line1 = "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n";
-        String line2 = "\n";
+        String terminator1 = "\n";
         String line3 = "\"GC task thread#1 (ParallelGC)\" os_prio=? tid=0x00007f6220026800 nid=0x182a runnable\n";
-        String line4 = "\n";
+        String terminator2 = "\n";
         String line5 = "\"GC task thread#2 (ParallelGC)\" os_prio=0 tid=0x00007f6220028800 nid=0x182b runnable\n";
-        String line6 = "\n";
+        String terminator3 = "\n";
 
-        String content = line1 + line2 + line3 + line4 + line5 + line6;
+        String content = line1 + terminator1 + line3 + terminator2 + line5 + terminator3;
 
         StackTraceParser p = new StackTraceParser();
 
@@ -186,11 +234,11 @@ public class StackTraceParserTest {
 
         StackTraceEvent e = (StackTraceEvent)events.get(0);
         assertEquals("GC task thread#0 (ParallelGC)", e.getThreadName());
-        assertEquals(line1 + line2, e.getRawRepresentation());
+        assertEquals(line1, e.getRawRepresentation());
 
         StackTraceEvent e2 = (StackTraceEvent)events.get(1);
         assertEquals("GC task thread#2 (ParallelGC)", e2.getThreadName());
-        assertEquals(line5 + line6, e2.getRawRepresentation());
+        assertEquals(line5, e2.getRawRepresentation());
     }
 
     @Test
@@ -200,9 +248,9 @@ public class StackTraceParserTest {
         String line2 = "this line does not matter\n";
         String line3 = "\n";
         String line4 = "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0x00007f6220026800 nid=0x182a runnable\n";
-        String line5 = "\n";
+        String terminator = "\n";
 
-        String content = line1 + line2 + line3 + line4 + line5;
+        String content = line1 + line2 + line3 + line4 + terminator;
 
         StackTraceParser p = new StackTraceParser();
 
@@ -228,7 +276,7 @@ public class StackTraceParserTest {
         assertEquals(1, events.size());
         StackTraceEvent e = (StackTraceEvent)events.get(0);
         assertEquals("GC task thread#1 (ParallelGC)", e.getThreadName());
-        assertEquals(line4 + line5, e.getRawRepresentation());
+        assertEquals(line4, e.getRawRepresentation());
     }
 
     /**
@@ -238,13 +286,13 @@ public class StackTraceParserTest {
     public void parse_InvalidTID_TheWholeTraceWillBeSkippedButNextOneWillBeCollected_NotFirstTrace() throws Exception {
 
         String line1 = "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0x00007f6220025000 nid=0x1829 runnable\n";
-        String line2 = "\n";
+        String terminator1 = "\n";
         String line3 = "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=something-that-is-not-hex nid=0x182a runnable\n";
-        String line4 = "\n";
+        String terminator2 = "\n";
         String line5 = "\"GC task thread#2 (ParallelGC)\" os_prio=0 tid=0x00007f6220028800 nid=0x182b runnable\n";
-        String line6 = "\n";
+        String terminator3 = "\n";
 
-        String content = line1 + line2 + line3 + line4 + line5 + line6;
+        String content = line1 + terminator1 + line3 + terminator2 + line5 + terminator3;
 
         StackTraceParser p = new StackTraceParser();
 
@@ -271,11 +319,11 @@ public class StackTraceParserTest {
 
         StackTraceEvent e = (StackTraceEvent)events.get(0);
         assertEquals("GC task thread#0 (ParallelGC)", e.getThreadName());
-        assertEquals(line1 + line2, e.getRawRepresentation());
+        assertEquals(line1, e.getRawRepresentation());
 
         StackTraceEvent e2 = (StackTraceEvent)events.get(1);
         assertEquals("GC task thread#2 (ParallelGC)", e2.getThreadName());
-        assertEquals(line5 + line6, e2.getRawRepresentation());
+        assertEquals(line5, e2.getRawRepresentation());
     }
 
     @Test
@@ -286,9 +334,9 @@ public class StackTraceParserTest {
         String line2 = "this line does not matter\n";
         String line3 = "\n";
         String line4 = "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0x00007f6220026800 nid=0x182a runnable\n";
-        String line5 = "\n";
+        String terminator = "\n";
 
-        String content = line1 + line2 + line3 + line4 + line5;
+        String content = line1 + line2 + line3 + line4 + terminator;
 
         StackTraceParser p = new StackTraceParser();
 
@@ -315,7 +363,7 @@ public class StackTraceParserTest {
 
         StackTraceEvent e = (StackTraceEvent)events.get(0);
         assertEquals("GC task thread#1 (ParallelGC)", e.getThreadName());
-        assertEquals(line4 + line5, e.getRawRepresentation());
+        assertEquals(line4, e.getRawRepresentation());
     }
 
     /**
@@ -326,13 +374,13 @@ public class StackTraceParserTest {
             throws Exception {
 
         String line1 = "\"GC task thread#0 (ParallelGC)\" os_prio=0 tid=0xfe nid=0x1829 runnable\n";
-        String line2 = "\n";
+        String terminator1 = "\n";
         String line3 = "\"GC task thread#1 (ParallelGC)\" os_prio=0 tid=0xff nid=0x182a no-such-thread-state\n";
-        String line4 = "\n";
+        String terminator2 = "\n";
         String line5 = "\"GC task thread#2 (ParallelGC)\" os_prio=0 tid=0x00007f6220028800 nid=0x182b runnable\n";
-        String line6 = "\n";
+        String terminator3 = "\n";
 
-        String content = line1 + line2 + line3 + line4 + line5 + line6;
+        String content = line1 + terminator1 + line3 + terminator2 + line5 + terminator3;
 
         StackTraceParser p = new StackTraceParser();
 
@@ -359,11 +407,11 @@ public class StackTraceParserTest {
 
         StackTraceEvent e = (StackTraceEvent)events.get(0);
         assertEquals("GC task thread#0 (ParallelGC)", e.getThreadName());
-        assertEquals(line1 + line2, e.getRawRepresentation());
+        assertEquals(line1, e.getRawRepresentation());
 
         StackTraceEvent e2 = (StackTraceEvent)events.get(1);
         assertEquals("GC task thread#2 (ParallelGC)", e2.getThreadName());
-        assertEquals(line5 + line6, e2.getRawRepresentation());
+        assertEquals(line5, e2.getRawRepresentation());
     }
 
     @Test
@@ -446,12 +494,14 @@ public class StackTraceParserTest {
                         "\t- locked <0x00000005cc36c560> (a java.lang.ref.Reference$Lock)\n" +
                         "\n" +
                         "   Locked ownable synchronizers:\n" +
-                        "\t- None\n" +
-                        "\n";
+                        "\t- None\n";
+
+        String contentWithTerminator = content + "\n";
 
         StackTraceParser p = new StackTraceParser();
 
-        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+                new ByteArrayInputStream(contentWithTerminator.getBytes())));
 
         String line;
 
@@ -513,11 +563,14 @@ public class StackTraceParserTest {
                         "\tat java.lang.Thread.run(Thread.java:745)\n" +
                         "\n" +
                         "   Locked ownable synchronizers:\n" +
-                        "\t- None\n";
+                        "\t- None";
+
+        String contentWithTerminator = content + "\n";
 
         StackTraceParser p = new StackTraceParser();
 
-        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+                new ByteArrayInputStream(contentWithTerminator.getBytes())));
 
         String line;
 

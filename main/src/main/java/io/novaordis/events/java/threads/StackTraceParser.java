@@ -16,17 +16,18 @@
 
 package io.novaordis.events.java.threads;
 
-import io.novaordis.events.api.event.Event;
-import io.novaordis.events.api.parser.ParserBase;
-import io.novaordis.events.api.parser.ParsingException;
-import io.novaordis.events.java.threads.event.StackTraceEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.novaordis.events.api.event.Event;
+import io.novaordis.events.api.parser.ParserBase;
+import io.novaordis.events.java.threads.event.StackTraceEvent;
+import io.novaordis.utilities.parsing.ParsingException;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
@@ -104,8 +105,12 @@ public class StackTraceParser extends ParserBase {
 
             if (currentStackTrace != null) {
 
-                currentStackTrace.appendToRawRepresentation(lineNumber, line);
+                currentStackTrace.appendRawLine(line);
 
+                if (log.isDebugEnabled()) {
+
+                    log.debug("line " + lineNumber + " appended to the raw representation of " + currentStackTrace);
+                }
             }
             else {
 
@@ -227,7 +232,12 @@ public class StackTraceParser extends ParserBase {
 
         e.setThreadState(fragment2.substring(j));
 
-        e.appendToRawRepresentation(lineNumber, rawHeader);
+        e.appendRawLine(rawHeader);
+
+        if (log.isDebugEnabled()) {
+
+            log.debug("line " + lineNumber + " appended to the raw representation of " + e);
+        }
     }
 
     // Protected -------------------------------------------------------------------------------------------------------

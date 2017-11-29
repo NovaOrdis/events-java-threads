@@ -31,10 +31,10 @@ import org.slf4j.LoggerFactory;
 import io.novaordis.events.api.event.EndOfStreamEvent;
 import io.novaordis.events.api.event.Event;
 import io.novaordis.events.api.parser.ParserBase;
-import io.novaordis.events.api.parser.ParsingException;
 import io.novaordis.events.java.threads.event.JavaThreadDumpEvent;
 import io.novaordis.events.java.threads.event.MemorySnapshotEvent;
 import io.novaordis.events.java.threads.event.StackTraceEvent;
+import io.novaordis.utilities.parsing.ParsingException;
 
 /**
  * The implementation is NOT thread safe.
@@ -136,6 +136,12 @@ public class JavaThreadDumpParser extends ParserBase {
 
             if (line.trim().isEmpty()) {
 
+                //
+                // we "logically" discard the line, but we keep it in the raw representation of the event
+                //
+
+                currentJavaThreadDumpEvent.appendRawLine(line);
+
                 if (log.isDebugEnabled()) {
 
                     log.debug("discarded empty line " + lineNumber);
@@ -194,9 +200,10 @@ public class JavaThreadDumpParser extends ParserBase {
                             "mismatch between thread dump timestamp pattern and format, line: " + lineNumber, e);
                 }
 
-                threadDumpTimestamp = null;
                 currentJavaThreadDumpEvent = new JavaThreadDumpEvent(lineNumber, timestamp);
-                //currentJavaThreadDumpEvent.appendRaw(threadDumpTimestamp);
+                currentJavaThreadDumpEvent.appendRawLine(threadDumpTimestamp);
+                currentJavaThreadDumpEvent.appendRawLine(line);
+                threadDumpTimestamp = null;
                 discardEmptyLine = true;
             }
         }
@@ -230,7 +237,7 @@ public class JavaThreadDumpParser extends ParserBase {
                 // one, wrap up the current thread dump instead
                 //
 
-                result = wrapUpCurrentThreadDump(currentJavaThreadDumpEvent, stackTraceParser);
+                result = wrapUpCurrentThreadDump(currentJavaThreadDumpEvent, stackTraceParser, line);
                 currentJavaThreadDumpEvent = null;
             }
 
@@ -269,7 +276,7 @@ public class JavaThreadDumpParser extends ParserBase {
                     // close the stack trace parser
                     //
 
-                    result = wrapUpCurrentThreadDump(currentJavaThreadDumpEvent, stackTraceParser);
+                    result = wrapUpCurrentThreadDump(currentJavaThreadDumpEvent, stackTraceParser, null);
                     currentJavaThreadDumpEvent = null;
                 }
             }
@@ -356,8 +363,11 @@ public class JavaThreadDumpParser extends ParserBase {
     /**
      * Wrap up the given (current) thread dump event: collect all leftovers from the stack trace parser, but don't close
      * the stack trace parser, as it will be needed to process upcoming thread dump events.
+     *
+     * @param epilogueLine may be null if there's no epilogue line.
      */
-    private static List<Event> wrapUpCurrentThreadDump(JavaThreadDumpEvent current, StackTraceParser stackTraceParser) {
+    private static List<Event> wrapUpCurrentThreadDump(
+            JavaThreadDumpEvent current, StackTraceParser stackTraceParser, String epilogueLine) {
 
         if (current == null) {
 
@@ -370,6 +380,12 @@ public class JavaThreadDumpParser extends ParserBase {
 
         List<Event> stackTraces = stackTraceParser.flush();
         current.addStackTraces(stackTraces);
+
+        if (epilogueLine != null) {
+
+            current.setStringProperty(JavaThreadDumpEvent.RAW_EPILOGUE_PROPERTY_NAME, epilogueLine);
+        }
+
         List<Event> result = Collections.singletonList(current);
 
         if (log.isDebugEnabled()) {
