@@ -16,16 +16,6 @@
 
 package io.novaordis.events.java.threads;
 
-import io.novaordis.events.api.event.EndOfStreamEvent;
-import io.novaordis.events.api.event.Event;
-import io.novaordis.events.api.parser.ParserBase;
-import io.novaordis.events.api.parser.ParsingException;
-import io.novaordis.events.java.threads.event.JavaThreadDumpEvent;
-import io.novaordis.events.java.threads.event.MemorySnapshotEvent;
-import io.novaordis.events.java.threads.event.StackTraceEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -34,6 +24,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.novaordis.events.api.event.EndOfStreamEvent;
+import io.novaordis.events.api.event.Event;
+import io.novaordis.events.api.parser.ParserBase;
+import io.novaordis.events.api.parser.ParsingException;
+import io.novaordis.events.java.threads.event.JavaThreadDumpEvent;
+import io.novaordis.events.java.threads.event.MemorySnapshotEvent;
+import io.novaordis.events.java.threads.event.StackTraceEvent;
 
 /**
  * The implementation is NOT thread safe.
@@ -90,6 +91,7 @@ public class JavaThreadDumpParser extends ParserBase {
 
     private StackTraceParser stackTraceParser;
 
+    // maintained in raw format (untrimmed)
     private String threadDumpTimestamp;
 
     private JavaThreadDumpEvent currentJavaThreadDumpEvent;
@@ -179,7 +181,7 @@ public class JavaThreadDumpParser extends ParserBase {
 
                 try {
 
-                    timestamp = THREAD_DUMP_TIMESTAMP_FORMATS[0].parse(threadDumpTimestamp).getTime();
+                    timestamp = THREAD_DUMP_TIMESTAMP_FORMATS[0].parse(threadDumpTimestamp.trim()).getTime();
                 }
                 catch(ParseException e) {
 
@@ -194,6 +196,7 @@ public class JavaThreadDumpParser extends ParserBase {
 
                 threadDumpTimestamp = null;
                 currentJavaThreadDumpEvent = new JavaThreadDumpEvent(lineNumber, timestamp);
+                //currentJavaThreadDumpEvent.appendRaw(threadDumpTimestamp);
                 discardEmptyLine = true;
             }
         }
@@ -248,10 +251,10 @@ public class JavaThreadDumpParser extends ParserBase {
 
                 //
                 // we identified a new thread dump in the same file, put the thread dump parser in "expect a header
-                // line" mode ...
+                // line" mode. We maintain the whole line, without trimming, to add it later to the raw representation
                 //
 
-                this.threadDumpTimestamp = line.trim();
+                this.threadDumpTimestamp = line;
 
                 if (log.isDebugEnabled()) {
 

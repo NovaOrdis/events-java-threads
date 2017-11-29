@@ -16,14 +16,18 @@
 
 package io.novaordis.events.java.threads.event;
 
-import io.novaordis.events.api.event.EndOfStreamEvent;
-import io.novaordis.events.api.event.Event;
-import io.novaordis.events.java.threads.event.JavaThreadDumpEvent;
-import io.novaordis.events.java.threads.event.StackTraceEvent;
-import org.junit.Test;
-
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.junit.Test;
+
+import io.novaordis.events.api.event.EndOfStreamEvent;
+import io.novaordis.events.api.event.Event;
+import io.novaordis.events.java.threads.JavaThreadDumpParser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -178,6 +182,39 @@ public class JavaThreadDumpEventTest {
         tde.addStackTrace(t2);
 
         assertEquals(2, tde.getThreadCount());
+    }
+
+    // getRawRepresentation() ------------------------------------------------------------------------------------------
+
+    //@Test
+    public void getRawRepresentation_MustBeIdenticalWithOriginalContent() throws Exception {
+
+        File f = new File(System.getProperty("basedir"), "src/test/resources/samples/016_raw_representation.txt");
+
+        assertTrue(f.isFile());
+
+        String originalContent = new String(Files.readAllBytes(f.toPath()));
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+
+        String line;
+
+        List<Event> events = new ArrayList<>();
+
+        while((line = br.readLine()) != null) {
+
+            events.addAll(p.parse(line));
+        }
+
+        br.close();
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+
+        String rawRepresentation = e.getRawRepresentation();
+
+        assertEquals(originalContent, rawRepresentation);
     }
 
     // Package protected -----------------------------------------------------------------------------------------------
