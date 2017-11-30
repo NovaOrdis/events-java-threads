@@ -18,6 +18,7 @@ package io.novaordis.events.java.threads.procedure;
 
 import org.junit.Test;
 
+import io.novaordis.events.api.event.EndOfStreamEvent;
 import io.novaordis.events.api.event.GenericEvent;
 import io.novaordis.events.processing.Procedure;
 
@@ -61,6 +62,15 @@ public abstract class ProcedureTest {
             assertTrue(msg.contains("GenericEvent"));
         }
     }
+
+    @Test
+    public void process_EndOfStream() throws Exception {
+
+        Procedure c = getProcedureToTest();
+
+        c.process(new EndOfStreamEvent());
+    }
+
 
     // Package protected -----------------------------------------------------------------------------------------------
 

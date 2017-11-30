@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import io.novaordis.events.api.event.EndOfStreamEvent;
 import io.novaordis.events.api.event.Event;
 import io.novaordis.events.java.threads.event.JavaThreadDumpEvent;
 import io.novaordis.events.processing.EventProcessingException;
@@ -61,6 +62,11 @@ public class Count extends ProcedureBase {
 
     @Override
     protected void process(AtomicLong invocationCount, Event e) throws EventProcessingException {
+
+        if (e instanceof EndOfStreamEvent) {
+
+            return; 
+        }
 
         if (!(e instanceof JavaThreadDumpEvent)) {
 
