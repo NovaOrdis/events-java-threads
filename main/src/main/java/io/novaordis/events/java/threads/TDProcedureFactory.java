@@ -16,10 +16,11 @@
 
 package io.novaordis.events.java.threads;
 
+import java.util.List;
+
+import io.novaordis.events.java.threads.procedure.Count;
 import io.novaordis.events.processing.Procedure;
 import io.novaordis.events.processing.ProcedureFactory;
-
-import java.util.List;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
@@ -39,6 +40,11 @@ public class TDProcedureFactory implements ProcedureFactory {
 
     @Override
     public Procedure find(String commandLineLabel, int from, List<String> arguments) {
+
+        if (Count.LABEL.equals(commandLineLabel)) {
+
+            return new Count();
+        }
 
         return null;
     }

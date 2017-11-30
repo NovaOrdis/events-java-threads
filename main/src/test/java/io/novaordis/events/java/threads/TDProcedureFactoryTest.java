@@ -16,11 +16,13 @@
 
 package io.novaordis.events.java.threads;
 
-import io.novaordis.events.java.threads.TDProcedureFactory;
-import org.junit.Test;
-
 import java.util.Collections;
 
+import org.junit.Test;
+
+import io.novaordis.events.java.threads.procedure.Count;
+
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -47,6 +49,16 @@ public class TDProcedureFactoryTest {
         TDProcedureFactory f = new TDProcedureFactory();
 
         assertNull(f.find("I-am-sure-there-is-no-such-procedure", 0, Collections.emptyList()));
+    }
+
+    @Test
+    public void count() throws Exception {
+
+        TDProcedureFactory f = new TDProcedureFactory();
+
+        Count procedure = (Count)f.find(Count.LABEL, 1, Collections.emptyList());
+
+        assertNotNull(procedure);
     }
 
     // Package protected -----------------------------------------------------------------------------------------------
