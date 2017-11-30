@@ -30,6 +30,8 @@ import io.novaordis.events.api.event.EndOfStreamEvent;
 import io.novaordis.events.api.event.Event;
 import io.novaordis.events.java.threads.event.StackTraceEvent;
 import io.novaordis.events.java.threads.event.ThreadState;
+import io.novaordis.events.query.FieldQuery;
+import io.novaordis.events.query.Query;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -765,6 +767,66 @@ public class StackTraceParserTest {
         StackTraceEvent e2 = (StackTraceEvent)events.get(1);
         assertEquals("0x000000005078a800", e2.getTid());
         assertEquals("http-192.168.30.11-8080-2035", e2.getThreadName());
+    }
+
+    @Test
+    public void parse_QueryPresent_EventDoesNotMatchTheQuery() throws Exception {
+
+        String content =
+                "\"Thread 1\" os_prio=1 tid=0x000000005ebd4800 nid=0xecc runnable\n" +
+                        "\n" +
+                        "\"Thread 2\" os_prio=2 tid=0x0000000000d09800 nid=0xf08 runnable\n";
+
+
+        Query query = new FieldQuery(StackTraceEvent.THREAD_NAME_PROPERTY_NAME, "no such thread name");
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        StackTraceParser p = new StackTraceParser();
+
+        assertTrue(p.parse(1, br.readLine(), query).isEmpty());
+        assertTrue(p.parse(2, br.readLine(), query).isEmpty());
+
+        List<Event> events = p.parse(3, br.readLine(), query);
+
+        br.close();
+
+        //
+        // the event must be discarded because it does not match the query
+        //
+        assertTrue(events.isEmpty());
+    }
+
+    @Test
+    public void parse_QueryPresent_EventMatchesTheQuery() throws Exception {
+
+        String content =
+                "\"Thread 1\" os_prio=1 tid=0x000000005ebd4800 nid=0xecc runnable\n" +
+                        "\n" +
+                        "\"Thread 2\" os_prio=2 tid=0x0000000000d09800 nid=0xf08 runnable\n";
+
+
+        Query query = new FieldQuery(StackTraceEvent.THREAD_NAME_PROPERTY_NAME, "Thread 1");
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        StackTraceParser p = new StackTraceParser();
+
+        assertTrue(p.parse(1, br.readLine(), query).isEmpty());
+        assertTrue(p.parse(2, br.readLine(), query).isEmpty());
+
+        List<Event> events = p.parse(3, br.readLine(), query);
+
+        br.close();
+
+        //
+        // we should get the event, it matched the query
+        //
+        assertEquals(1, events.size());
+
+        StackTraceEvent e = (StackTraceEvent)events.get(0);
+
+        assertEquals("Thread 1", e.getThreadName());
     }
 
     // close() ---------------------------------------------------------------------------------------------------------

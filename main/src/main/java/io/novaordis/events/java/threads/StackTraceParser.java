@@ -66,7 +66,22 @@ public class StackTraceParser extends ParserBase {
 
             if (currentStackTrace != null) {
 
-                result = Collections.singletonList(currentStackTrace);
+                if (query == null || query.selects(currentStackTrace)) {
+
+                    //
+                    // if the query is present, apply it and only return the stack trace event if it matches the query
+                    //
+
+                    result = Collections.singletonList(currentStackTrace);
+                }
+                else {
+
+                    if (log.isDebugEnabled()) {
+
+                        log.debug(query + " dropped " + currentStackTrace);
+                    }
+                }
+
                 log.debug("parsing complete for " + currentStackTrace.toString());
             }
 

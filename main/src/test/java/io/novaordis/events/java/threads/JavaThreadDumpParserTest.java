@@ -21,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +35,8 @@ import io.novaordis.events.java.threads.event.JavaThreadDumpEvent;
 import io.novaordis.events.java.threads.event.MemorySnapshotEvent;
 import io.novaordis.events.java.threads.event.StackTraceEvent;
 import io.novaordis.events.java.threads.event.ThreadState;
+import io.novaordis.events.query.FieldQuery;
+import io.novaordis.events.query.Query;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -960,6 +963,136 @@ public class JavaThreadDumpParserTest {
 
         MemorySnapshotEvent e2 = (MemorySnapshotEvent)events.get(1);
         assertNotNull(e2);
+    }
+
+    // parse with query ------------------------------------------------------------------------------------------------
+
+    @Test
+    public void parse_QueryPresent_QueryDoesNotMatchAnyStackTraces() throws Exception {
+
+        String content =
+                "2017-11-27 07:21:23\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"blue\" os_prio=2 tid=0x000000005ebd4800 nid=0xecc runnable\n" +
+                        "\n" +
+                        "\"red\" os_prio=2 tid=0x0000000000d09800 nid=0xf08 runnable\n" +
+                        "\n" +
+                        "\"green\" os_prio=2 tid=0x0000000000d0b000 nid=0x678 runnable\n" +
+                        "\n" +
+                        "JNI global references: 44590";
+
+        Query query = new FieldQuery(StackTraceEvent.THREAD_NAME_PROPERTY_NAME, "white");
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+        long lineNumber = 1;
+        List<Event> events = new ArrayList<>();
+        while((line = br.readLine()) != null) {
+
+            List<Event> es = p.parse(lineNumber ++, line, query);
+            events.addAll(es);
+        }
+
+        //
+        // no stack trace matches, but we'll still get an empty thread dump event
+        //
+
+        assertEquals(1, events.size());
+        JavaThreadDumpEvent jtde = (JavaThreadDumpEvent)events.get(0);
+
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-11-27 07:21:23").getTime(),
+                jtde.getTime().longValue());
+        assertEquals(0, jtde.getThreadCount());
+    }
+
+    @Test
+    public void parse_QueryPresent_QueryMatchesSomeStackTraces() throws Exception {
+
+        String content =
+                "2017-11-27 07:21:23\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"blue\" os_prio=2 tid=0x000000005ebd4800 nid=0xecc runnable\n" +
+                        "\n" +
+                        "\"red\" os_prio=2 tid=0x0000000000d09800 nid=0xf08 runnable\n" +
+                        "\n" +
+                        "\"green\" os_prio=2 tid=0x0000000000d0b000 nid=0x678 runnable\n" +
+                        "\n" +
+                        "JNI global references: 44590";
+
+        Query query = new FieldQuery(StackTraceEvent.THREAD_NAME_PROPERTY_NAME, "red");
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+        long lineNumber = 1;
+        List<Event> events = new ArrayList<>();
+        while((line = br.readLine()) != null) {
+
+            List<Event> es = p.parse(lineNumber ++, line, query);
+            events.addAll(es);
+        }
+
+        assertEquals(1, events.size());
+        JavaThreadDumpEvent jtde = (JavaThreadDumpEvent)events.get(0);
+
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-11-27 07:21:23").getTime(),
+                jtde.getTime().longValue());
+        assertEquals(1, jtde.getThreadCount());
+
+        StackTraceEvent ste = jtde.getStackTraceEvent(0);
+        assertEquals("red", ste.getThreadName());
+    }
+
+    @Test
+    public void parse_QueryPresent_QueryMatchesAllStackTraces() throws Exception {
+
+        String content =
+                "2017-11-27 07:21:23\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"blue 1\" os_prio=2 tid=0x000000005ebd4800 nid=0xecc runnable\n" +
+                        "\n" +
+                        "\"blue 2\" os_prio=2 tid=0x0000000000d09800 nid=0xf08 runnable\n" +
+                        "\n" +
+                        "\"blue 3\" os_prio=2 tid=0x0000000000d0b000 nid=0x678 runnable\n" +
+                        "\n" +
+                        "JNI global references: 44590";
+
+        Query query = new FieldQuery(StackTraceEvent.THREAD_NAME_PROPERTY_NAME, "blue");
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+        long lineNumber = 1;
+        List<Event> events = new ArrayList<>();
+        while((line = br.readLine()) != null) {
+
+            List<Event> es = p.parse(lineNumber ++, line, query);
+            events.addAll(es);
+        }
+
+        assertEquals(1, events.size());
+        JavaThreadDumpEvent jtde = (JavaThreadDumpEvent)events.get(0);
+
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-11-27 07:21:23").getTime(),
+                jtde.getTime().longValue());
+        assertEquals(3, jtde.getThreadCount());
+
+        StackTraceEvent ste = jtde.getStackTraceEvent(0);
+        assertEquals("blue 1", ste.getThreadName());
+        StackTraceEvent ste2 = jtde.getStackTraceEvent(1);
+        assertEquals("blue 2", ste2.getThreadName());
+        StackTraceEvent ste3 = jtde.getStackTraceEvent(2);
+        assertEquals("blue 3", ste3.getThreadName());
     }
 
     // Package protected -----------------------------------------------------------------------------------------------

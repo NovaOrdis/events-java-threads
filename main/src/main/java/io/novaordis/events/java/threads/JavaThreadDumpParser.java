@@ -238,7 +238,7 @@ public class JavaThreadDumpParser extends ParserBase {
                 // one, wrap up the current thread dump instead
                 //
 
-                result = wrapUpCurrentThreadDump(currentJavaThreadDumpEvent, stackTraceParser, line);
+                result = wrapUpCurrentThreadDump(query, currentJavaThreadDumpEvent, stackTraceParser, line);
                 currentJavaThreadDumpEvent = null;
             }
 
@@ -277,7 +277,7 @@ public class JavaThreadDumpParser extends ParserBase {
                     // close the stack trace parser
                     //
 
-                    result = wrapUpCurrentThreadDump(currentJavaThreadDumpEvent, stackTraceParser, null);
+                    result = wrapUpCurrentThreadDump(query, currentJavaThreadDumpEvent, stackTraceParser, null);
                     currentJavaThreadDumpEvent = null;
                 }
             }
@@ -373,10 +373,11 @@ public class JavaThreadDumpParser extends ParserBase {
      * Wrap up the given (current) thread dump event: collect all leftovers from the stack trace parser, but don't close
      * the stack trace parser, as it will be needed to process upcoming thread dump events.
      *
+     * @param query may be null
      * @param epilogueLine may be null if there's no epilogue line.
      */
     private static List<Event> wrapUpCurrentThreadDump(
-            JavaThreadDumpEvent current, StackTraceParser stackTraceParser, String epilogueLine) {
+            Query query, JavaThreadDumpEvent current, StackTraceParser stackTraceParser, String epilogueLine) {
 
         if (current == null) {
 
@@ -388,6 +389,16 @@ public class JavaThreadDumpParser extends ParserBase {
         }
 
         List<Event> stackTraces = stackTraceParser.flush();
+
+        //
+        // if we have query, apply it
+        //
+
+        if (query != null) {
+
+            stackTraces = query.filter(stackTraces);
+        }
+
         current.addStackTraces(stackTraces);
 
         if (epilogueLine != null) {
