@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import io.novaordis.events.api.event.EndOfStreamEvent;
 import io.novaordis.events.api.event.Event;
 import io.novaordis.events.api.parser.ParserBase;
+import io.novaordis.events.api.parser.QueryOnce;
 import io.novaordis.events.java.threads.event.JavaThreadDumpEvent;
 import io.novaordis.events.java.threads.event.MemorySnapshotEvent;
 import io.novaordis.events.java.threads.event.StackTraceEvent;
@@ -217,6 +218,7 @@ public class JavaThreadDumpParser extends ParserBase {
                     log.debug("line " + lineNumber + " concludes memory snapshot parsing");
                 }
 
+                QueryOnce.set(memorySnapshotEvent, query != null);
                 result = Collections.singletonList(memorySnapshotEvent);
                 memorySnapshotEvent = null;
             }
@@ -406,6 +408,7 @@ public class JavaThreadDumpParser extends ParserBase {
             current.setStringProperty(JavaThreadDumpEvent.RAW_EPILOGUE_PROPERTY_NAME, epilogueLine);
         }
 
+        QueryOnce.set(current, query != null);
         List<Event> result = Collections.singletonList(current);
 
         if (log.isDebugEnabled()) {

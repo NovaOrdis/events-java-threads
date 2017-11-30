@@ -31,6 +31,7 @@ import io.novaordis.events.api.event.EndOfStreamEvent;
 import io.novaordis.events.api.event.Event;
 import io.novaordis.events.api.event.EventProperty;
 import io.novaordis.events.api.event.Property;
+import io.novaordis.events.api.parser.QueryOnce;
 import io.novaordis.events.java.threads.event.JavaThreadDumpEvent;
 import io.novaordis.events.java.threads.event.MemorySnapshotEvent;
 import io.novaordis.events.java.threads.event.StackTraceEvent;
@@ -589,9 +590,11 @@ public class JavaThreadDumpParserTest {
 
         long lineNumber = 1;
 
+        Query noQuery = null;
+
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line, null);
+            List<Event> es = p.parse(lineNumber, line, noQuery);
             events.addAll(es);
         }
 
@@ -601,6 +604,15 @@ public class JavaThreadDumpParserTest {
         br.close();
 
         assertEquals(3, events.size());
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+        assertFalse(QueryOnce.isQueryOnce(e));
+
+        JavaThreadDumpEvent e2 = (JavaThreadDumpEvent)events.get(1);
+        assertFalse(QueryOnce.isQueryOnce(e2));
+
+        JavaThreadDumpEvent e3 = (JavaThreadDumpEvent)events.get(2);
+        assertFalse(QueryOnce.isQueryOnce(e3));
     }
 
     @Test
@@ -1002,11 +1014,15 @@ public class JavaThreadDumpParserTest {
         //
 
         assertEquals(1, events.size());
+
         JavaThreadDumpEvent jtde = (JavaThreadDumpEvent)events.get(0);
 
         assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-11-27 07:21:23").getTime(),
                 jtde.getTime().longValue());
+
         assertEquals(0, jtde.getThreadCount());
+
+        assertTrue(QueryOnce.isQueryOnce(jtde));
     }
 
     @Test
@@ -1040,13 +1056,18 @@ public class JavaThreadDumpParserTest {
         }
 
         assertEquals(1, events.size());
+
         JavaThreadDumpEvent jtde = (JavaThreadDumpEvent)events.get(0);
 
         assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-11-27 07:21:23").getTime(),
                 jtde.getTime().longValue());
+
         assertEquals(1, jtde.getThreadCount());
 
+        assertTrue(QueryOnce.isQueryOnce(jtde));
+
         StackTraceEvent ste = jtde.getStackTraceEvent(0);
+
         assertEquals("red", ste.getThreadName());
     }
 
@@ -1081,11 +1102,15 @@ public class JavaThreadDumpParserTest {
         }
 
         assertEquals(1, events.size());
+
         JavaThreadDumpEvent jtde = (JavaThreadDumpEvent)events.get(0);
 
         assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-11-27 07:21:23").getTime(),
                 jtde.getTime().longValue());
+
         assertEquals(3, jtde.getThreadCount());
+
+        assertTrue(QueryOnce.isQueryOnce(jtde));
 
         StackTraceEvent ste = jtde.getStackTraceEvent(0);
         assertEquals("blue 1", ste.getThreadName());
