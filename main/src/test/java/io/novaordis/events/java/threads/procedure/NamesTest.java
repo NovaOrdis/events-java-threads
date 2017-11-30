@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package io.novaordis.events.java.threads;
+package io.novaordis.events.java.threads.procedure;
 
-import java.util.Collections;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 import org.junit.Test;
 
-import io.novaordis.events.java.threads.procedure.Count;
-import io.novaordis.events.java.threads.procedure.Names;
+import io.novaordis.events.java.threads.event.JavaThreadDumpEvent;
+import io.novaordis.events.java.threads.event.StackTraceEvent;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
- * @since 8/14/17
+ * @since 11/29/17
  */
-public class TDProcedureFactoryTest {
+public class NamesTest extends ProcedureTest {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
@@ -45,36 +46,59 @@ public class TDProcedureFactoryTest {
     // Tests -----------------------------------------------------------------------------------------------------------
 
     @Test
-    public void find_NoSuchProcedure() throws Exception {
+    public void getCommandLineLabels() throws Exception {
 
-        TDProcedureFactory f = new TDProcedureFactory();
+        Names c = getProcedureToTest();
 
-        assertNull(f.find("I-am-sure-there-is-no-such-procedure", 0, Collections.emptyList()));
+        assertTrue(c.getCommandLineLabels().contains(Names.LABEL));
     }
 
-    @Test
-    public void count() throws Exception {
-
-        TDProcedureFactory f = new TDProcedureFactory();
-
-        Count procedure = (Count)f.find(Count.LABEL, 1, Collections.emptyList());
-
-        assertNotNull(procedure);
-    }
+    // process() -------------------------------------------------------------------------------------------------------
 
     @Test
-    public void names() throws Exception {
+    public void process() throws Exception {
 
-        TDProcedureFactory f = new TDProcedureFactory();
+        Names c = getProcedureToTest();
 
-        Names procedure = (Names)f.find(Names.LABEL, 1, Collections.emptyList());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(baos);
 
-        assertNotNull(procedure);
+        c.setPrintStream(out);
+
+        JavaThreadDumpEvent e = new JavaThreadDumpEvent(1L, 1000L);
+
+        StackTraceEvent st = new StackTraceEvent(10L);
+        st.setThreadName("Z");
+        e.addStackTrace(st);
+
+        StackTraceEvent st2 = new StackTraceEvent(20L);
+        st2.setThreadName("K");
+        e.addStackTrace(st2);
+
+        StackTraceEvent st3 = new StackTraceEvent(30L);
+        st3.setThreadName("A");
+        e.addStackTrace(st3);
+
+        c.process(e);
+
+        out.flush();
+
+        String actual = new String(baos.toByteArray());
+
+        String expected = c.getTimestampFormat().format(1000L) + "\n  A\n  K\n  Z\n";
+
+        assertEquals(expected, actual);
     }
 
     // Package protected -----------------------------------------------------------------------------------------------
 
     // Protected -------------------------------------------------------------------------------------------------------
+
+    @Override
+    protected Names getProcedureToTest() throws Exception {
+
+        return new Names();
+    }
 
     // Private ---------------------------------------------------------------------------------------------------------
 

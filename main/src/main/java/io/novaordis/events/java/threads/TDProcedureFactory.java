@@ -19,6 +19,7 @@ package io.novaordis.events.java.threads;
 import java.util.List;
 
 import io.novaordis.events.java.threads.procedure.Count;
+import io.novaordis.events.java.threads.procedure.Names;
 import io.novaordis.events.processing.Procedure;
 import io.novaordis.events.processing.ProcedureFactory;
 
@@ -44,6 +45,11 @@ public class TDProcedureFactory implements ProcedureFactory {
         if (Count.LABEL.equals(commandLineLabel)) {
 
             return new Count();
+        }
+
+        if (Names.LABEL.equals(commandLineLabel)) {
+
+            return new Names();
         }
 
         return null;
