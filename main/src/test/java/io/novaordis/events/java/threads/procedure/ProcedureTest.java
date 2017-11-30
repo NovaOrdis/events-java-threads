@@ -14,49 +14,25 @@
  * limitations under the License.
  */
 
-package io.novaordis.events.java.threads.cli;
+package io.novaordis.events.java.threads.procedure;
 
-import io.novaordis.events.cli.EventParserRuntime;
-import io.novaordis.events.java.threads.JavaThreadDumpParser;
-import io.novaordis.events.java.threads.TDProcedureFactory;
-import io.novaordis.utilities.UserErrorException;
-import io.novaordis.utilities.appspec.ApplicationSpecificBehavior;
+import org.junit.Test;
+
+import io.novaordis.events.api.event.GenericEvent;
+import io.novaordis.events.processing.Procedure;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
- * @since 8/14/17
+ * @since 11/29/17
  */
-public class Main {
+public abstract class ProcedureTest {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
-    public static final String APPLICATION_NAME = "td";
-
     // Static ----------------------------------------------------------------------------------------------------------
-
-    public static void main(String[] args) throws Exception {
-
-        try {
-
-            ApplicationSpecificBehavior b = new ApplicationSpecificBehavior(
-                    new JavaThreadDumpParser(),
-                    new TDProcedureFactory());
-
-            EventParserRuntime runtime = new EventParserRuntime(args, APPLICATION_NAME, b);
-
-            if (runtime.getConfiguration().isHelp()) {
-
-                runtime.displayHelp(APPLICATION_NAME, System.out);
-                return;
-            }
-
-            runtime.run();
-
-        } catch (UserErrorException e) {
-
-            System.err.println(e.getMessage());
-        }
-    }
 
     // Attributes ------------------------------------------------------------------------------------------------------
 
@@ -64,9 +40,33 @@ public class Main {
 
     // Public ----------------------------------------------------------------------------------------------------------
 
+    // Tests -----------------------------------------------------------------------------------------------------------
+
+    @Test
+    public void process_NotAJavaThreadDumpEvent() throws Exception {
+
+        Procedure c = getProcedureToTest();
+
+        try {
+
+            c.process(new GenericEvent());
+
+            fail("should have thrown exception");
+        }
+        catch(IllegalArgumentException e) {
+
+            String msg = e.getMessage();
+
+            assertTrue(msg.contains("expecting a JavaThreadDumpEvent"));
+            assertTrue(msg.contains("GenericEvent"));
+        }
+    }
+
     // Package protected -----------------------------------------------------------------------------------------------
 
     // Protected -------------------------------------------------------------------------------------------------------
+
+    protected abstract Procedure getProcedureToTest() throws Exception;
 
     // Private ---------------------------------------------------------------------------------------------------------
 
