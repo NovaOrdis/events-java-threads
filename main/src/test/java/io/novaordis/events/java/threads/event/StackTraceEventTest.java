@@ -427,6 +427,84 @@ public class StackTraceEventTest {
         assertEquals(stack, parsedStack);
     }
 
+    @Test
+    public void update_OneLineStackTraceEvent() throws Exception {
+
+        long lineNumber = 10L;
+
+        StackTraceEvent e = new StackTraceEvent(lineNumber);
+
+        assertTrue(e.update(11L, ""));
+
+        //
+        // make sure the raw representation is correctly updated
+        //
+
+        String raw = e.getRawRepresentation();
+        assertEquals("", raw);
+
+        //
+        // test the stack
+        //
+
+        StringProperty p = e.getStringProperty(StackTraceEvent.STACK_PROPERTY_NAME);
+        assertNull(p);
+
+        assertFalse(e.update(12L, "something"));
+    }
+
+    @Test
+    public void update_OneLineStackTraceEvent2() throws Exception {
+
+        long lineNumber = 10L;
+
+        StackTraceEvent e = new StackTraceEvent(lineNumber);
+
+        assertTrue(e.update(11L, "  "));
+
+        //
+        // make sure the raw representation is correctly updated
+        //
+
+        String raw = e.getRawRepresentation();
+        assertEquals("  ", raw);
+
+        //
+        // test the stack
+        //
+
+        StringProperty p = e.getStringProperty(StackTraceEvent.STACK_PROPERTY_NAME);
+        assertNull(p);
+
+        assertFalse(e.update(12L, "something"));
+    }
+
+    @Test
+    public void update_OneLineStackTraceEvent3() throws Exception {
+
+        long lineNumber = 10L;
+
+        StackTraceEvent e = new StackTraceEvent(lineNumber);
+
+        assertTrue(e.update(11L, "\t"));
+
+        //
+        // make sure the raw representation is correctly updated
+        //
+
+        String raw = e.getRawRepresentation();
+        assertEquals("\t", raw);
+
+        //
+        // test the stack
+        //
+
+        StringProperty p = e.getStringProperty(StackTraceEvent.STACK_PROPERTY_NAME);
+        assertNull(p);
+
+        assertFalse(e.update(12L, "something"));
+    }
+
     // Package protected -----------------------------------------------------------------------------------------------
 
     // Protected -------------------------------------------------------------------------------------------------------

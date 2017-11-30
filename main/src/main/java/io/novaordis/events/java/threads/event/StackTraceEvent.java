@@ -90,6 +90,7 @@ public class StackTraceEvent extends GenericEvent {
     private static final byte THREAD_STATE_MODE = 0;
     private static final byte STACK_MODE = 1;
     private static final byte LOCKING_INFO_MODE = 2;
+    private static final byte CLOSED_MODE = 3;
 
     // Attributes ------------------------------------------------------------------------------------------------------
 
@@ -402,16 +403,26 @@ public class StackTraceEvent extends GenericEvent {
 
             line = line.trim();
 
-            if (!line.startsWith("java.lang.Thread.State")) {
+            if (line.isEmpty()) {
 
-                log.warn("line " + lineNumber + ": expecting thread state information but got \"" + line + "\"");
+                //
+                // "short" stack trace event
+                //
+                mode = CLOSED_MODE;
             }
+            else {
 
-            //
-            // we don't do anything with it just yet
-            //
+                if (!line.startsWith("java.lang.Thread.State")) {
 
-            mode = STACK_MODE;
+                    log.warn("line " + lineNumber + ": expecting thread state information but got \"" + line + "\"");
+                }
+
+                //
+                // we don't do anything with it just yet
+                //
+
+                mode = STACK_MODE;
+            }
         }
         else if (mode == STACK_MODE) {
 
@@ -450,12 +461,20 @@ public class StackTraceEvent extends GenericEvent {
             //
             // simply drop for the time being
             //
+
+            if (log.isDebugEnabled()) {
+
+                log.debug("discarding logging information");
+            }
+        }
+        else if (mode == CLOSED_MODE) {
+
+            return false;
         }
         else {
 
             throw new IllegalStateException("illegal mode: " + mode);
         }
-
 
         return true;
     }
