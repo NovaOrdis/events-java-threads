@@ -42,7 +42,7 @@ public class Names extends ProcedureBase {
 
     // Constants -------------------------------------------------------------------------------------------------------
 
-    public static final String LABEL = "count";
+    public static final String LABEL = "names";
 
     // Static ----------------------------------------------------------------------------------------------------------
 
