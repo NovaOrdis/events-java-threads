@@ -65,7 +65,7 @@ public class Count extends ProcedureBase {
 
         if (e instanceof EndOfStreamEvent) {
 
-            return; 
+            return;
         }
 
         if (!(e instanceof JavaThreadDumpEvent)) {
