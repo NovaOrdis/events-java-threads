@@ -110,6 +110,7 @@ function main() {
     local args
     local command
     local java_debug_args
+    local separator=$'\x1f' # US - unit separator
 
     while [ -n "$1" ]; do
 
@@ -123,19 +124,6 @@ function main() {
 
             VERBOSE=true
 
-        elif [ "$1" != "${1/ //}" ]; then
-
-            #
-            # the argument contains spaces, which means double quote were used. We need to pass those down, so the
-            # java command line parsing logic can detect the quoted strings. More then that, if the double quoted
-            # string contains escaped quotes, we want to pass them as such
-            #
-            # TODO: if more than one space is enclosed in quotes, the block of spaces is not passed, it is converted
-            #       to just one space, which is a defect. Fix.
-            #
-            escaped_inner_quotes=${1//\"/\\\"}
-            args="${args} \"${escaped_inner_quotes}\""
-
         elif [ -z "${command}" ]; then
 
             command=$1
@@ -143,16 +131,15 @@ function main() {
         else
 
             #
-            # everything else is passed to the java layer
+            # accumulate the rest of the arguments between special separator characters to pass them to the java layer
             #
-
-            args="${args} $1"
+            [ -z "${args}" ] && args="$1" || args="${args}${separator}$1"
         fi
+
         shift
     done
 
     debug "command: ${command}"
-
 
     if [ "${command}" = "version" ]; then
 
@@ -176,7 +163,8 @@ function main() {
         # we weren't able to handle it satisfactory at the bash level, pass it to the java runtime at the front of
         # the argument list
         #
-        args="${command} ${args}"
+
+        [ -z "${args}" ] && args="${command}" || args="${command}${separator}${args}"
 
     else
 
@@ -184,7 +172,7 @@ function main() {
         # the command is not handled in bash, add it to the front of the argument list
         #
 
-        args="${command} ${args}"
+        [ -z "${args}" ] && args="${command}" || args="${command}${separator}${args}"
     fi
 
     local java_bin
@@ -198,9 +186,88 @@ function main() {
     debug "java_bin: ${java_bin}"
     debug "classpath: ${classpath}"
     debug "verbose_system_property: ${verbose_system_property}"
-    debug "arguments:>${args}<"
+    debug "args before post-processing: ${args}"
 
-    ${java_bin} -Xmx3096m -Xms3096m ${java_debug_args} -cp ${classpath} ${verbose_system_property} ${MAIN_CLASS} ${args}
+    #
+    # re-assemble the command line, by re-initializing the positional parameters, and pass it to the underlying process
+    #
+    IFS=${separator}
+    set - ${args}
+    IFS="$(printf ' \t\n')" # restore the standard separators
+
+    debug "args after post-processing: " $@
+
+    command="${java_bin} ${java_debug_args} -cp ${classpath} ${verbose_system_property} ${MAIN_CLASS}"
+    debug ${command} $@
+    ${command} "$@"
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
