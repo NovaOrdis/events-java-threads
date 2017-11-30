@@ -200,7 +200,7 @@ function main() {
     debug "verbose_system_property: ${verbose_system_property}"
     debug "arguments:>${args}<"
 
-    ${java_bin} ${java_debug_args} -cp ${classpath} ${verbose_system_property} ${MAIN_CLASS} ${args}
+    ${java_bin} -Xmx3096m -Xms3096m ${java_debug_args} -cp ${classpath} ${verbose_system_property} ${MAIN_CLASS} ${args}
 }
 
 
