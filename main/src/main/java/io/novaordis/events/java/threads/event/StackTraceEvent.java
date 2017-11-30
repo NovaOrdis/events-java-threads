@@ -23,6 +23,7 @@ import io.novaordis.events.api.event.BooleanProperty;
 import io.novaordis.events.api.event.GenericEvent;
 import io.novaordis.events.api.event.IntegerProperty;
 import io.novaordis.events.api.event.StringProperty;
+import io.novaordis.utilities.parsing.ParsingException;
 
 /**
  * @author Ovidiu Feodorov <ovidiu@novaordis.com>
@@ -53,6 +54,11 @@ public class StackTraceEvent extends GenericEvent {
     //
     public static final String OBJECT_WAIT_MONITOR_PROPERTY_NAME = "object-wait-monitor";
 
+    //
+    // the literal, multi-line stack, as read from the dump
+    //
+    public static final String STACK_PROPERTY_NAME = "stack";
+
     // Static ----------------------------------------------------------------------------------------------------------
 
     /**
@@ -81,7 +87,14 @@ public class StackTraceEvent extends GenericEvent {
         return Integer.parseUnsignedInt(s, 16);
     }
 
+    private static final byte THREAD_STATE_MODE = 0;
+    private static final byte STACK_MODE = 1;
+    private static final byte LOCKING_INFO_MODE = 2;
+
     // Attributes ------------------------------------------------------------------------------------------------------
+
+    private byte mode = THREAD_STATE_MODE;
+    private transient String stack;
 
     // Constructors ----------------------------------------------------------------------------------------------------
 
@@ -366,6 +379,85 @@ public class StackTraceEvent extends GenericEvent {
     public void setObjectWaitMonitor(String s) {
 
         setStringProperty(OBJECT_WAIT_MONITOR_PROPERTY_NAME, s);
+    }
+
+    /**
+     * After the stack trace event header is identified and parsed by the StackTraceParser, based on the header pattern,
+     * the parser sends incoming lines to the event for interpretation. These lines contain the thread state, the raw
+     * stack trace lines, locking information, etc; this includes empty lines as well. The parser should not send
+     * another stack trace header or another thread dump header, but if it does, update() must return false
+     * ("not accepted")
+     *
+     * The method updates the raw representation of the event, as well.
+     *
+     * @return true if the line is accepted, false if it does not belong with this event.
+     *
+     * @throws ParsingException
+     */
+    public boolean update(long lineNumber, String line) throws ParsingException {
+
+        appendRawLine(line);
+
+        if (mode == THREAD_STATE_MODE) {
+
+            line = line.trim();
+
+            if (!line.startsWith("java.lang.Thread.State")) {
+
+                log.warn("line " + lineNumber + ": expecting thread state information but got \"" + line + "\"");
+            }
+
+            //
+            // we don't do anything with it just yet
+            //
+
+            mode = STACK_MODE;
+        }
+        else if (mode == STACK_MODE) {
+
+            //
+            // accumulate stack up to the first empty line
+            //
+
+            if (line.trim().isEmpty()) {
+
+                //
+                // transfer the stack to a property
+                //
+
+                if (stack != null) {
+
+                    setStringProperty(STACK_PROPERTY_NAME, stack);
+                }
+
+                mode = LOCKING_INFO_MODE;
+            }
+            else {
+
+                if (stack == null) {
+
+                    stack = line;
+                }
+                else {
+
+                    stack += "\n";
+                    stack += line;
+                }
+            }
+        }
+        else if (mode == LOCKING_INFO_MODE) {
+
+            //
+            // simply drop for the time being
+            //
+        }
+        else {
+
+            throw new IllegalStateException("illegal mode: " + mode);
+        }
+
+
+        return true;
     }
 
     @Override

@@ -114,19 +114,14 @@ public class StackTraceParser extends ParserBase {
         else {
 
             //
-            // the line did not match the header pattern; for the time being, accumulate it to raw representation of
-            // the thread stack; this includes empty lines as well, we keep accumulating until we find another
-            // thread dump
+            // the line did not match the header pattern, so we pass it to the event for interpretation, it is
+            // the thread state, the raw stack trace, locking information, etc; this includes empty lines as well, we
+            // keep accumulating sending it to the current instance until we find another thread dump
             //
 
             if (currentStackTrace != null) {
 
-                currentStackTrace.appendRawLine(line);
-
-                if (log.isDebugEnabled()) {
-
-                    log.debug("line " + lineNumber + " appended to the raw representation of " + currentStackTrace);
-                }
+                currentStackTrace.update(lineNumber, line);
             }
             else {
 

@@ -16,12 +16,17 @@
 
 package io.novaordis.events.java.threads.event;
 
-import io.novaordis.events.java.threads.event.StackTraceEvent;
-import io.novaordis.events.java.threads.event.ThreadState;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+
 import org.junit.Test;
+
+import io.novaordis.events.api.event.StringProperty;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -362,6 +367,64 @@ public class StackTraceEventTest {
         e.setDaemon(true);
 
         assertTrue(e.isDaemon());
+    }
+
+    // update() --------------------------------------------------------------------------------------------------------
+
+    @Test
+    public void update() throws Exception {
+
+        long lineNumber = 10L;
+
+        StackTraceEvent e = new StackTraceEvent(lineNumber);
+
+        String threadStateLine = "   java.lang.Thread.State: RUNNABLE";
+
+        String stack =
+                "        at sun.awt.windows.WToolkit.eventLoop(Native Method)\n" +
+                        "        at sun.awt.windows.WToolkit.run(WToolkit.java:306)\n" +
+                        "        at java.lang.Thread.run(Thread.java:745)";
+
+        String lockingInfo =
+                "   Locked ownable synchronizers:\n" +
+                        "        - None";
+
+        String content =
+                threadStateLine + "\n" +
+                        stack + "\n" + "\n" +
+                        lockingInfo + "\n";
+
+        String contentWithTerminator = content + "\n";
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+                new ByteArrayInputStream(contentWithTerminator.getBytes())));
+
+        String line;
+        while((line = br.readLine()) != null) {
+
+            lineNumber ++;
+            assertTrue(e.update(lineNumber, line));
+        }
+
+        br.close();
+
+        //
+        // make sure the raw representation is correctly updated
+        //
+
+        String raw = e.getRawRepresentation();
+        assertEquals(content, raw);
+
+        //
+        // test the stack
+        //
+
+        StringProperty p = e.getStringProperty(StackTraceEvent.STACK_PROPERTY_NAME);
+        assertNotNull(p);
+
+        String parsedStack = p.getString();
+
+        assertEquals(stack, parsedStack);
     }
 
     // Package protected -----------------------------------------------------------------------------------------------
