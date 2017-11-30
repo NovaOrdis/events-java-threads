@@ -286,7 +286,7 @@ public class JavaThreadDumpEventTest {
 
         while((line = br.readLine()) != null) {
 
-            events.addAll(p.parse(line));
+            events.addAll(p.parse(line, null));
         }
 
         br.close();
@@ -353,7 +353,7 @@ public class JavaThreadDumpEventTest {
 
         while((line = br.readLine()) != null) {
 
-            events.addAll(p.parse(line));
+            events.addAll(p.parse(line, null));
         }
 
         br.close();

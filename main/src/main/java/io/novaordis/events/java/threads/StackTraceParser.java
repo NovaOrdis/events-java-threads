@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import io.novaordis.events.api.event.Event;
 import io.novaordis.events.api.parser.ParserBase;
 import io.novaordis.events.java.threads.event.StackTraceEvent;
+import io.novaordis.events.query.Query;
 import io.novaordis.utilities.parsing.ParsingException;
 
 /**
@@ -55,7 +56,7 @@ public class StackTraceParser extends ParserBase {
     // ParserBase overrides --------------------------------------------------------------------------------------------
 
     @Override
-    protected List<Event> parse(long lineNumber, String line) throws ParsingException {
+    protected List<Event> parse(long lineNumber, String line, Query query) throws ParsingException {
 
         List<Event> result = EMPTY_LIST;
 

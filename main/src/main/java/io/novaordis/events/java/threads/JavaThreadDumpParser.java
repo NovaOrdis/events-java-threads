@@ -34,6 +34,7 @@ import io.novaordis.events.api.parser.ParserBase;
 import io.novaordis.events.java.threads.event.JavaThreadDumpEvent;
 import io.novaordis.events.java.threads.event.MemorySnapshotEvent;
 import io.novaordis.events.java.threads.event.StackTraceEvent;
+import io.novaordis.events.query.Query;
 import io.novaordis.utilities.parsing.ParsingException;
 
 /**
@@ -113,7 +114,7 @@ public class JavaThreadDumpParser extends ParserBase {
      * @return StackTraceEvents, MemorySnapshotEvents, etc.
      */
     @Override
-    protected List<Event> parse(long lineNumber, String line) throws ParsingException {
+    protected List<Event> parse(long lineNumber, String line, Query query) throws ParsingException {
 
         if (log.isDebugEnabled()) {
 
@@ -305,7 +306,7 @@ public class JavaThreadDumpParser extends ParserBase {
                     // engage the stack trace parser and identify individual stack traces
                     //
 
-                    List<Event> stackTraces = stackTraceParser.parse(lineNumber, line);
+                    List<Event> stackTraces = stackTraceParser.parse(lineNumber, line, query);
                     currentJavaThreadDumpEvent.addStackTraces(stackTraces);
                 }
             }

@@ -16,6 +16,16 @@
 
 package io.novaordis.events.java.threads;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+
 import io.novaordis.events.api.event.EndOfStreamEvent;
 import io.novaordis.events.api.event.Event;
 import io.novaordis.events.api.event.EventProperty;
@@ -24,15 +34,6 @@ import io.novaordis.events.java.threads.event.JavaThreadDumpEvent;
 import io.novaordis.events.java.threads.event.MemorySnapshotEvent;
 import io.novaordis.events.java.threads.event.StackTraceEvent;
 import io.novaordis.events.java.threads.event.ThreadState;
-import org.junit.Test;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -100,7 +101,7 @@ public class JavaThreadDumpParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -137,7 +138,7 @@ public class JavaThreadDumpParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -191,7 +192,7 @@ public class JavaThreadDumpParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -253,7 +254,7 @@ public class JavaThreadDumpParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -314,7 +315,7 @@ public class JavaThreadDumpParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -371,7 +372,7 @@ public class JavaThreadDumpParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -424,7 +425,7 @@ public class JavaThreadDumpParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -482,7 +483,7 @@ public class JavaThreadDumpParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -540,7 +541,7 @@ public class JavaThreadDumpParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -587,7 +588,7 @@ public class JavaThreadDumpParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -618,7 +619,7 @@ public class JavaThreadDumpParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -661,7 +662,7 @@ public class JavaThreadDumpParserTest {
         long lineNumber = 1;
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -700,7 +701,7 @@ public class JavaThreadDumpParserTest {
         long lineNumber = 1;
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -735,7 +736,7 @@ public class JavaThreadDumpParserTest {
         long lineNumber = 1;
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -786,7 +787,7 @@ public class JavaThreadDumpParserTest {
         long lineNumber = 1;
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -815,7 +816,7 @@ public class JavaThreadDumpParserTest {
         long lineNumber = 1;
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -846,7 +847,7 @@ public class JavaThreadDumpParserTest {
         long lineNumber = 1;
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -874,7 +875,7 @@ public class JavaThreadDumpParserTest {
         long lineNumber = 1;
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -902,7 +903,7 @@ public class JavaThreadDumpParserTest {
         long lineNumber = 1;
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -940,7 +941,7 @@ public class JavaThreadDumpParserTest {
         long lineNumber = 1;
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 

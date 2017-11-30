@@ -77,7 +77,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -123,7 +123,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -174,7 +174,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -221,7 +221,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -264,7 +264,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -306,7 +306,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -350,7 +350,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -394,7 +394,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -434,7 +434,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -470,7 +470,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -511,7 +511,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -580,7 +580,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -633,7 +633,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -679,7 +679,7 @@ public class StackTraceParserTest {
 
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -718,7 +718,7 @@ public class StackTraceParserTest {
         long lineNumber = 1;
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -749,7 +749,7 @@ public class StackTraceParserTest {
         long lineNumber = 1;
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
