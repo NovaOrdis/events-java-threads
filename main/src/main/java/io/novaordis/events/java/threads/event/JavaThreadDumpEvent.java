@@ -106,6 +106,28 @@ public class JavaThreadDumpEvent extends GenericTimedEvent {
         return s;
     }
 
+    /**
+     * If we carry no stack traces we prefer not to be displayed at all, otherwise we default to getRawRepresentation().
+     */
+    @Override
+    public String getPreferredRepresentation(String fieldSeparator) {
+
+        if (getThreadCount() == 0) {
+
+            //
+            // display nothing
+            //
+
+            return "";
+        }
+
+        //
+        // defer to raw representation
+        //
+
+        return null;
+    }
+
     // Public ----------------------------------------------------------------------------------------------------------
 
     /**
