@@ -590,11 +590,9 @@ public class JavaThreadDumpParserTest {
 
         long lineNumber = 1;
 
-        Query noQuery = null;
-
         for(; (line = br.readLine()) != null; lineNumber ++) {
 
-            List<Event> es = p.parse(lineNumber, line, noQuery);
+            List<Event> es = p.parse(lineNumber, line, null);
             events.addAll(es);
         }
 
@@ -1119,6 +1117,221 @@ public class JavaThreadDumpParserTest {
         StackTraceEvent ste3 = jtde.getStackTraceEvent(2);
         assertEquals("blue 3", ste3.getThreadName());
     }
+
+    // parse and time query optimization -------------------------------------------------------------------------------
+
+    @Test
+    public void parse_TimeQuery_From_To() throws Exception {
+        String content =
+                "2017-01-01 00:00:00\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"stack1\" #1 daemon prio=1 os_prio=1 tid=0x0000000000000001 nid=0x0001 runnable [0x0000000000000001]\n" +
+                        "\n" +
+                        "JNI global references: 1\n" +
+                        "\n" +
+                        "2017-01-01 01:00:00\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"stack2\" #2 daemon prio=2 os_prio=2 tid=0x0000000000000002 nid=0x0002 runnable [0x0000000000000002]\n" +
+                        "\n" +
+                        "JNI global references: 1\n" +
+                        "\n" +
+                        "2017-01-01 02:00:00\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"stack3\" #3 daemon prio=3 os_prio=3 tid=0x0000000000000003 nid=0x0003 runnable [0x0000000000000003]\n" +
+                        "\n" +
+                        "JNI global references: 1\n" +
+                        "\n" +
+                        "2017-01-01 03:00:00\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"stack4\" #4 daemon prio=4 os_prio=4 tid=0x0000000000000004 nid=0x0004 runnable [0x0000000000000004]\n" +
+                        "\n" +
+                        "JNI global references: 1\n";
+
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        MockQuery query = new MockQuery();
+        query.setFrom(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-01-01 00:30:00").getTime());
+        query.setTo(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-01-01 02:30:00").getTime());
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+        long lineNumber = 1;
+        List<Event> events = new ArrayList<>();
+
+        while((line = br.readLine()) != null) {
+
+            List<Event> es = p.parse(lineNumber ++, line, query);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close());
+
+        assertEquals(3, events.size());
+
+        assertTrue(events.get(2) instanceof EndOfStreamEvent);
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-01-01 01:00:00").getTime(), e.getTime().longValue());
+        List<StackTraceEvent> ste = e.getStackTraceEvents();
+        assertEquals(1, ste.size());
+        assertEquals("stack2", ste.get(0).getThreadName());
+
+        JavaThreadDumpEvent e2 = (JavaThreadDumpEvent)events.get(1);
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-01-01 02:00:00").getTime(), e2.getTime().longValue());
+        List<StackTraceEvent> ste2 = e2.getStackTraceEvents();
+        assertEquals(1, ste2.size());
+        assertEquals("stack3", ste2.get(0).getThreadName());
+    }
+
+    @Test
+    public void parse_TimeQuery_From() throws Exception {
+        String content =
+                "2017-01-01 00:00:00\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"stack1\" #1 daemon prio=1 os_prio=1 tid=0x0000000000000001 nid=0x0001 runnable [0x0000000000000001]\n" +
+                        "\n" +
+                        "JNI global references: 1\n" +
+                        "\n" +
+                        "2017-01-01 01:00:00\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"stack2\" #2 daemon prio=2 os_prio=2 tid=0x0000000000000002 nid=0x0002 runnable [0x0000000000000002]\n" +
+                        "\n" +
+                        "JNI global references: 1\n" +
+                        "\n" +
+                        "2017-01-01 02:00:00\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"stack3\" #3 daemon prio=3 os_prio=3 tid=0x0000000000000003 nid=0x0003 runnable [0x0000000000000003]\n" +
+                        "\n" +
+                        "JNI global references: 1\n" +
+                        "\n" +
+                        "2017-01-01 03:00:00\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"stack4\" #4 daemon prio=4 os_prio=4 tid=0x0000000000000004 nid=0x0004 runnable [0x0000000000000004]\n" +
+                        "\n" +
+                        "JNI global references: 1\n";
+
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        MockQuery query = new MockQuery();
+        query.setFrom(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-01-01 02:00:00").getTime());
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+        long lineNumber = 1;
+        List<Event> events = new ArrayList<>();
+
+        while((line = br.readLine()) != null) {
+
+            List<Event> es = p.parse(lineNumber ++, line, query);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close());
+
+        assertEquals(3, events.size());
+
+        assertTrue(events.get(2) instanceof EndOfStreamEvent);
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-01-01 02:00:00").getTime(), e.getTime().longValue());
+        List<StackTraceEvent> ste = e.getStackTraceEvents();
+        assertEquals(1, ste.size());
+        assertEquals("stack3", ste.get(0).getThreadName());
+
+        JavaThreadDumpEvent e2 = (JavaThreadDumpEvent)events.get(1);
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-01-01 03:00:00").getTime(), e2.getTime().longValue());
+        List<StackTraceEvent> ste2 = e2.getStackTraceEvents();
+        assertEquals(1, ste2.size());
+        assertEquals("stack4", ste2.get(0).getThreadName());
+    }
+
+    @Test
+    public void parse_TimeQuery_To() throws Exception {
+        String content =
+                "2017-01-01 00:00:00\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"stack1\" #1 daemon prio=1 os_prio=1 tid=0x0000000000000001 nid=0x0001 runnable [0x0000000000000001]\n" +
+                        "\n" +
+                        "JNI global references: 1\n" +
+                        "\n" +
+                        "2017-01-01 01:00:00\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"stack2\" #2 daemon prio=2 os_prio=2 tid=0x0000000000000002 nid=0x0002 runnable [0x0000000000000002]\n" +
+                        "\n" +
+                        "JNI global references: 1\n" +
+                        "\n" +
+                        "2017-01-01 02:00:00\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"stack3\" #3 daemon prio=3 os_prio=3 tid=0x0000000000000003 nid=0x0003 runnable [0x0000000000000003]\n" +
+                        "\n" +
+                        "JNI global references: 1\n" +
+                        "\n" +
+                        "2017-01-01 03:00:00\n" +
+                        "Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.45-b02 mixed mode):\n" +
+                        "\n" +
+                        "\"stack4\" #4 daemon prio=4 os_prio=4 tid=0x0000000000000004 nid=0x0004 runnable [0x0000000000000004]\n" +
+                        "\n" +
+                        "JNI global references: 1\n";
+
+
+        JavaThreadDumpParser p = new JavaThreadDumpParser();
+
+        MockQuery query = new MockQuery();
+        query.setTo(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-01-01 02:00:00").getTime());
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(content.getBytes())));
+
+        String line;
+        long lineNumber = 1;
+        List<Event> events = new ArrayList<>();
+
+        while((line = br.readLine()) != null) {
+
+            List<Event> es = p.parse(lineNumber ++, line, query);
+            events.addAll(es);
+        }
+
+        events.addAll(p.close());
+
+        assertEquals(4, events.size());
+
+        assertTrue(events.get(3) instanceof EndOfStreamEvent);
+
+        JavaThreadDumpEvent e = (JavaThreadDumpEvent)events.get(0);
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-01-01 00:00:00").getTime(), e.getTime().longValue());
+        List<StackTraceEvent> ste = e.getStackTraceEvents();
+        assertEquals(1, ste.size());
+        assertEquals("stack1", ste.get(0).getThreadName());
+
+        JavaThreadDumpEvent e2 = (JavaThreadDumpEvent)events.get(1);
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-01-01 01:00:00").getTime(), e2.getTime().longValue());
+        List<StackTraceEvent> ste2 = e2.getStackTraceEvents();
+        assertEquals(1, ste2.size());
+        assertEquals("stack2", ste2.get(0).getThreadName());
+
+        JavaThreadDumpEvent e3 = (JavaThreadDumpEvent)events.get(2);
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-01-01 02:00:00").getTime(), e3.getTime().longValue());
+        List<StackTraceEvent> ste3 = e3.getStackTraceEvents();
+        assertEquals(1, ste3.size());
+        assertEquals("stack3", ste3.get(0).getThreadName());
+
+    }
+
 
     // Package protected -----------------------------------------------------------------------------------------------
 

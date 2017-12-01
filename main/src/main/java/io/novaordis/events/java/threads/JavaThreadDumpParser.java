@@ -95,6 +95,8 @@ public class JavaThreadDumpParser extends ParserBase {
 
     private ThreadDumpTimestampInfo timestamp;
 
+    private boolean ousideTimeWindow;
+
     private JavaThreadDumpEvent currentJavaThreadDumpEvent;
 
     private boolean discardEmptyLine;
@@ -106,6 +108,8 @@ public class JavaThreadDumpParser extends ParserBase {
     public JavaThreadDumpParser() {
 
         this.stackTraceParser = new StackTraceParser();
+
+        this.ousideTimeWindow = false;
     }
 
     // ParserBase overrides --------------------------------------------------------------------------------------------
@@ -247,12 +251,11 @@ public class JavaThreadDumpParser extends ParserBase {
                 // save a lot of parsing, so we parse the timestamp here
                 //
 
+                long ts;
+
                 try {
 
-                    long ts = THREAD_DUMP_TIMESTAMP_FORMATS[0].parse(line.trim()).getTime();
-
-                    this.timestamp = new ThreadDumpTimestampInfo(ts, line);
-
+                    ts = THREAD_DUMP_TIMESTAMP_FORMATS[0].parse(line.trim()).getTime();
                 }
                 catch(ParseException e) {
 
@@ -265,21 +268,39 @@ public class JavaThreadDumpParser extends ParserBase {
                             "mismatch between thread dump timestamp pattern and format, line: " + lineNumber, e);
                 }
 
-                if (log.isDebugEnabled()) {
+                if (query != null && !query.selects(ts)) {
 
-                    log.debug("valid thread dump timestamp found: " + timestamp.getRawTimestampLine());
+                    //
+                    // the event falls outside the interesting time window
+                    //
+
+                    this.ousideTimeWindow = true;
+
+                    if (log.isDebugEnabled()) {
+
+                        log.debug(line.trim() + " thread dump discarded because it falls outside the time window");
+                    }
                 }
+                else {
 
-                if (currentJavaThreadDumpEvent != null) {
+                    this.timestamp = new ThreadDumpTimestampInfo(ts, line);
 
-                    //
-                    // since we established that another thread dump is starting, we are wrapping up the current thread
-                    // dump event, if any. The method collects all leftovers from the stack trace parser, but does not
-                    // close the stack trace parser
-                    //
+                    if (log.isDebugEnabled()) {
 
-                    result = wrapUpCurrentThreadDump(query, currentJavaThreadDumpEvent, stackTraceParser, null);
-                    currentJavaThreadDumpEvent = null;
+                        log.debug("valid thread dump timestamp found: " + timestamp.getRawTimestampLine());
+                    }
+
+                    if (currentJavaThreadDumpEvent != null) {
+
+                        //
+                        // since we established that another thread dump is starting, we are wrapping up the current thread
+                        // dump event, if any. The method collects all leftovers from the stack trace parser, but does not
+                        // close the stack trace parser
+                        //
+
+                        result = wrapUpCurrentThreadDump(query, currentJavaThreadDumpEvent, stackTraceParser, null);
+                        currentJavaThreadDumpEvent = null;
+                    }
                 }
             }
             else {
@@ -292,12 +313,16 @@ public class JavaThreadDumpParser extends ParserBase {
                     //
 
                     //
-                    // if it is not blank, warn
+                    // if it is not blank, or outside the time window, warn
                     //
 
-                    if (!line.trim().isEmpty()) {
+                    if (ousideTimeWindow && log.isDebugEnabled()) {
 
-                        log.warn("discarding line " + lineNumber + ": " + line);
+                        log.debug("line " + lineNumber + " discarded because it falls outside the time window");
+                    }
+                    else if (!line.trim().isEmpty()) {
+
+                        log.warn("line " + lineNumber + " discarded: " + line);
                     }
                 }
                 else
