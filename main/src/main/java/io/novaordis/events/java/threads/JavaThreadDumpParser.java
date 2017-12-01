@@ -93,8 +93,7 @@ public class JavaThreadDumpParser extends ParserBase {
 
     private StackTraceParser stackTraceParser;
 
-    // maintained in raw format (untrimmed)
-    private String threadDumpTimestamp;
+    private ThreadDumpTimestampInfo timestamp;
 
     private JavaThreadDumpEvent currentJavaThreadDumpEvent;
 
@@ -162,16 +161,17 @@ public class JavaThreadDumpParser extends ParserBase {
             }
 
         }
-        else if (threadDumpTimestamp != null) {
+        else if (timestamp != null) {
 
             //
             // we identified a thread dump timestamp on the previous line, this line must be a thread dump header
+            //
 
             Matcher m = THREAD_DUMP_HEADER_PATTERNS[0].matcher(line);
 
             if (!m.find()) {
 
-                threadDumpTimestamp = null;
+                timestamp = null;
                 log.warn("skipping thread dump started at line " + (lineNumber - 1) + " because thread dump header missing on line " + lineNumber + ": " + line);
             }
             else {
@@ -181,32 +181,11 @@ public class JavaThreadDumpParser extends ParserBase {
                     log.debug("thread dump header found, building the thread dump event ...");
                 }
 
-                //
-                // parse the timestamp, we keep the format at this layer
-                //
-
-                long timestamp;
-
-                try {
-
-                    timestamp = THREAD_DUMP_TIMESTAMP_FORMATS[0].parse(threadDumpTimestamp.trim()).getTime();
-                }
-                catch(ParseException e) {
-
-                    //
-                    // this indicates a programming error, as the correct pattern was already identified; it means
-                    // there is a mismatch between pattern and format, so we signal invalid state
-                    //
-
-                    throw new IllegalStateException(
-                            "mismatch between thread dump timestamp pattern and format, line: " + lineNumber, e);
-                }
-
-                currentJavaThreadDumpEvent = new JavaThreadDumpEvent(lineNumber, timestamp);
-                currentJavaThreadDumpEvent.appendRawLine(threadDumpTimestamp);
+                currentJavaThreadDumpEvent = new JavaThreadDumpEvent(lineNumber, timestamp.getTimestamp());
+                currentJavaThreadDumpEvent.appendRawLine(timestamp.getRawTimestampLine());
                 currentJavaThreadDumpEvent.appendRawLine(line);
-                threadDumpTimestamp = null;
                 discardEmptyLine = true;
+                timestamp = null;
             }
         }
         else if (memorySnapshotEvent != null) {
@@ -265,14 +244,30 @@ public class JavaThreadDumpParser extends ParserBase {
                 //
                 // time query optimization: if there's a query, and it contains a time query component, we have
                 // sufficient information at this point to decide whether the event matches the query or not and thus
-                // save a lot of parsing
+                // save a lot of parsing, so we parse the timestamp here
                 //
 
-                this.threadDumpTimestamp = line;
+                try {
+
+                    long ts = THREAD_DUMP_TIMESTAMP_FORMATS[0].parse(line.trim()).getTime();
+
+                    this.timestamp = new ThreadDumpTimestampInfo(ts, line);
+
+                }
+                catch(ParseException e) {
+
+                    //
+                    // this indicates a programming error, as the correct pattern was already identified; it means
+                    // there is a mismatch between pattern and format, so we signal invalid state
+                    //
+
+                    throw new IllegalStateException(
+                            "mismatch between thread dump timestamp pattern and format, line: " + lineNumber, e);
+                }
 
                 if (log.isDebugEnabled()) {
 
-                    log.debug("thread dump timestamp found: " + threadDumpTimestamp);
+                    log.debug("valid thread dump timestamp found: " + timestamp.getRawTimestampLine());
                 }
 
                 if (currentJavaThreadDumpEvent != null) {
