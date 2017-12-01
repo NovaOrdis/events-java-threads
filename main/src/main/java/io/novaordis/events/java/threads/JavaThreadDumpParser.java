@@ -263,6 +263,10 @@ public class JavaThreadDumpParser extends ParserBase {
                 // we identified a new thread dump in the same file, put the thread dump parser in "expect a header
                 // line" mode. We maintain the whole line, without trimming, to add it later to the raw representation
                 //
+                // time query optimization: if there's a query, and it contains a time query component, we have
+                // sufficient information at this point to decide whether the event matches the query or not and thus
+                // save a lot of parsing
+                //
 
                 this.threadDumpTimestamp = line;
 
